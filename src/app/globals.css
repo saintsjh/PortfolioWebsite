@@ -1,0 +1,295 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Define the Ayu Mirage color palette */
+:root {
+  --ayu-bg: #212733;
+  --ayu-fg: #D9D7CE;
+  --ayu-red: #FF7777;
+  --ayu-orange: #FFD280;
+  --ayu-yellow: #F2D479;
+  --ayu-green: #C2D94C;
+  --ayu-cyan: #7EDDDE;
+  --ayu-blue: #73D0FF;
+  --ayu-purple: #DDBBFF;
+  --ayu-comment: #5C6773;
+}
+
+body {
+  background-color: var(--ayu-bg);
+  color: var(--ayu-fg);
+  font-family: var(--font-fira-code), monospace;
+}
+
+.title {
+  font-size: 1.50rem;
+  text-align: left;
+  letter-spacing: -0.05em;
+  font-weight: 100;
+  font-family: var(--font-fira-code), monospace;
+  margin-left: 20px;
+  margin-top: 15px;
+}
+
+.subtitle {
+  margin-top: 1rem;
+  font-size: 1.25rem; /* 20px */
+  text-align: center;
+  /* A slightly dimmer color than the main text */
+  color: color-mix(in srgb, var(--ayu-fg) 70%, transparent);
+}
+
+.nav-header {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: var(--ayu-bg);
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+.nav-link {
+  position: relative; /* This is the line to add */
+  font-size: 1rem;
+  color: var(--ayu-fg);
+  text-decoration: none;
+  transition: color 0.2s;
+  font-family: var(--font-fira-code), monospace;
+}
+
+.nav-link:hover {
+  color: var(--ayu-orange);
+}
+
+/* Apply the animated underline directly to the nav-link */
+.nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1.5px;
+  bottom: -5px; /* Position it just below the text */
+  left: 0;
+  background-color: var(--ayu-orange);
+  transition: width 0.3s ease-in-out;
+}
+
+/* On hover, expand the underline */
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.content {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 2.5rem;
+  max-width: 56rem;
+  padding: 2rem;
+  text-align: left;
+}
+
+.content-section {
+  display: flex;
+  align-items: baseline;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.section-heading {
+  flex: 0 0 100px;
+  text-align: right;
+  font-weight: 700;
+  color: var(--ayu-comment);
+}
+
+.section-body {
+  flex: 1;
+  max-width: 750px;
+  
+}
+
+.section-body ul {
+  list-style: none;
+  padding: 0;
+}
+
+li.list-item {
+  list-style-type: none; /* Remove default bullet points */
+  margin-top: 1rem; /* Add space between list items */
+}
+
+/* We style the 'a' tag directly now for the hover effect */
+.list-item a {
+  position: relative; /* Required for the pseudo-element positioning */
+  font-size: 1.0rem;
+  color: var(--ayu-fg);
+  text-decoration: none;
+  transition: color 0.2s;
+  padding-bottom: 5px; /* Add some space for the underline */
+  font-family: var(--font-fira-code), monospace;
+}
+
+/* The animated underline */
+.list-item a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1.5px;
+  bottom: 0;
+  left: 0;
+  background-color: var(--ayu-orange);
+  transition: width 0.3s ease-in-out;
+}
+
+/* On hover, change text color and expand the underline */
+.list-item a:hover {
+  color: var(--ayu-orange);
+}
+
+.list-item a:hover::after {
+  width: 100%;
+}
+
+.main-heading {
+  font-size: 1.50rem;
+  font-weight: 100;
+  font-family: var(--font-fira-code), monospace;
+  margin-top: 15px;
+}
+
+.img-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2rem;
+  border-radius: 50%;
+}
+.img-profile {
+  
+  width: 700px;
+  height: 900px;
+  border-radius: 95%;
+  object-fit: cover;
+}
+
+.main-content-container {
+  margin-right: 100px;
+  margin-top: 60px;
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+}
+
+.text-content {
+  flex: 3;
+  padding-left: 100px;
+}
+
+.image-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--ayu-comment); /* Acts as the grey box */
+  padding: 7px; /* Creates space around the image */
+  border-radius: 60px; /* Slightly larger than the image's border-radius */
+}
+
+.profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50px;
+  border: 1px solid var(--ayu-comment);
+  transition: all 0.3s ease-in-out;
+}
+
+.profile-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 25px 0px var(--ayu-cyan);
+}
+
+.flying-object {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: var(--ayu-cyan);
+  border-radius: 50%;
+  pointer-events: none; /* Allows clicks to pass through */
+  box-shadow: 0 0 10px 0px var(--ayu-cyan);
+}
+
+.activate-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 1rem 2rem;
+  font-family: var(--font-fira-code), monospace;
+  font-size: 1.25rem;
+  color: var(--ayu-fg);
+  background-color: transparent;
+  border: 2px solid var(--ayu-cyan);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.activate-button:hover {
+  background-color: var(--ayu-cyan);
+  color: var(--ayu-bg);
+  box-shadow: 0 0 25px 0px var(--ayu-cyan);
+}
+
+.stop-button {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  padding: 0.5rem 1rem;
+  font-family: var(--font-fira-code), monospace;
+  font-size: 1rem;
+  color: var(--ayu-fg);
+  background-color: transparent;
+  border: 2px solid var(--ayu-red);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.stop-button:hover {
+  background-color: var(--ayu-red);
+  color: var(--ayu-bg);
+  box-shadow: 0 0 15px 0px var(--ayu-red);
+}
+
+/* Additional styles for physics characters to prevent overlap */
+.physics-character {
+  white-space: pre;
+  font-family: var(--font-fira-code), monospace;
+}
+
+.physics-character.list-item {
+  line-height: 1.5;
+}
+
+.physics-character.main-heading {
+  font-size: 1.50rem;
+  font-weight: 100;
+  line-height: 1.2;
+}
+
+/* Ensure proper spacing for measured characters */
+[data-id] {
+  white-space: pre;
+}
