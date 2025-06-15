@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import Image from 'next/image';
 import { HomeContentItem } from '@/app/home-content';
 import TypingEffect from './TypingEffect';
 
@@ -262,7 +263,7 @@ const StaticContent: React.FC<{item: HomeContentItem, "data-id"?: number}> = ({i
     if (item.type === 'image') {
       return (
         <div className="image-content" data-id={dataId}>
-          <img className="profile-image" src={item.src} alt={item.alt} style={{width: '200px', height: 'auto'}}/>
+          <Image className="profile-image" src={item.src} alt={item.alt} width={200} height={200} />
         </div>
       );
     }

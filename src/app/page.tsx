@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import TypingEffect from "@/components/TypingEffect";
 import { homeContent } from './home-content'; // Import the content data
 
@@ -66,7 +67,7 @@ export default function Home() {
         <div className="image-content">
           {homeContent.map((item, index) => {
             if (item.type === 'image') {
-              return <img key={index} className="profile-image" src={item.src} alt={item.alt} />;
+              return <Image key={index} className="profile-image" src={item.src} alt={item.alt} width={400} height={400} />;
             }
             return null;
           })}

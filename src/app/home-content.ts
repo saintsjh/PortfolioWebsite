@@ -12,11 +12,6 @@ interface ParagraphBody {
   text3?: string;
 }
 
-interface ListBody {
-  type: 'list';
-  items: { text: string; href: string }[];
-}
-
 interface ListItemContent {
   type: 'listItem';
   heading: string; // "Projs." for all of them

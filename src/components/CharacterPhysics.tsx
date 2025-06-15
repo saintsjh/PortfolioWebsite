@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import Image from 'next/image';
 import { HomeContentItem } from '@/app/home-content';
 
 // --- TYPE DEFINITIONS ---
@@ -132,7 +133,7 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
     const animate = () => {
       if (physicsState === 'active') { // Only run simulation if active
         setObjects(prevObjects => {
-          let newObjects: PhysicsObject[] = JSON.parse(JSON.stringify(prevObjects));
+          const newObjects: PhysicsObject[] = JSON.parse(JSON.stringify(prevObjects));
           
           const subSteps = 5; // --- SUB-STEPPING to prevent tunneling ---
           const dt = 1 / subSteps;
@@ -226,7 +227,7 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
         });
       } else if (physicsState === 'settling') {
         setObjects(prevObjects => {
-          let newObjects: PhysicsObject[] = JSON.parse(JSON.stringify(prevObjects));
+          const newObjects: PhysicsObject[] = JSON.parse(JSON.stringify(prevObjects));
           let allSettled = true;
 
           for (const obj of newObjects) {
@@ -302,10 +303,12 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
         {/* The static image, which is visible in ALL states except 'measuring' */}
         <div className="image-content">
           {imageItem && imageItem.type === 'image' && (
-            <img
+            <Image
               className="profile-image"
               src={imageItem.src}
               alt={imageItem.alt}
+              width={400}
+              height={400}
               style={{ opacity: physicsState !== 'measuring' ? 1 : 0, transition: 'opacity 0.5s' }}
             />
           )}
@@ -428,7 +431,7 @@ const BlueprintRenderer: React.FC<{ content: HomeContentItem[] }> = ({ content }
       {/* Render the static image in the blueprint to ensure correct text flow */}
       <div className="image-content">
         {imageItem && imageItem.type === 'image' &&
-            <img className="profile-image" src={imageItem.src} alt={imageItem.alt}/>
+            <Image className="profile-image" src={imageItem.src} alt={imageItem.alt} width={400} height={400} />
         }
       </div>
     </div>
