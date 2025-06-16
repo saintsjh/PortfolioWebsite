@@ -1,214 +1,142 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
-interface FlyingObject {
-  id: number;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  radius: number;
-  mass: number;
-  color: string;
-}
-
-const NUM_OBJECTS = 1150;
+// The component no longer needs a specific interface for the objects,
+// as it will receive a raw ArrayBuffer.
 
 const PhysicsCanvas = () => {
-  const [objects, setObjects] = useState<FlyingObject[]>([]);
-  const mousePos = useRef({ x: 0, y: 0 });
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const workerRef = useRef<Worker | null>(null);
+  // This ref will now store the ArrayBuffer received from the worker.
+  const latestDataBuffer = useRef<ArrayBuffer | null>(null);
   const animationFrameId = useRef<number | null>(null);
 
   useEffect(() => {
-    console.log('[PhysicsCanvas] Component mounted: Initializing animation.');
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
 
-    // Initialize objects with velocity and physics properties
-    setObjects(
-      Array.from({ length: NUM_OBJECTS }, (_, i) => ({
-        id: i,
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        vx: (Math.random() - 0.5) * 2, // Random initial velocity
-        vy: (Math.random() - 0.5) * 2,
-        radius: 5, // Collision radius
-        mass: 1, // Mass for physics calculations
-        color: 'default',
-      }))
-    );
-    console.log(`[PhysicsCanvas] Created ${NUM_OBJECTS} objects.`);
+    if (!canvas || !ctx) {
+      return;
+    }
 
-    const handleMouseMove = (event: MouseEvent) => {
-      mousePos.current = { x: event.clientX, y: event.clientY };
+    const worker = new Worker(new URL('../workers/physics.worker.ts', import.meta.url), {
+      type: 'module'
+    });
+    workerRef.current = worker;
+
+    // This listener now receives an ArrayBuffer.
+    worker.onmessage = (e: MessageEvent<ArrayBuffer>) => {
+      // Store the buffer. The worker has now lost access to it, and this
+      // component is the new owner.
+      latestDataBuffer.current = e.data;
     };
-    window.addEventListener('mousemove', handleMouseMove);
-
-    const animate = () => {
-      setObjects((prevObjects) => {
-        let newObjects = [...prevObjects];
-
-        // Apply mouse attraction and update positions
-        newObjects = newObjects.map((obj) => {
-          const dx = mousePos.current.x - obj.x;
-          const dy = mousePos.current.y - obj.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          const normalizedDx = dx / distance || 0;
-          const normalizedDy = dy / distance || 0;
-          
-          let newVx = obj.vx;
-          let newVy = obj.vy;
-          let objectColor = 'rgba(255, 255, 255, 0.8)'; // Default white/transparent
-          
-          // Mouse attraction force (only when within radius)
-          const attractionRadius = 200;
-          if (distance < attractionRadius) {
-            const attractionForce = 0.3;
-            newVx += normalizedDx * attractionForce;
-            newVy += normalizedDy * attractionForce;
-            
-            // Calculate orange intensity based on distance (closer = more orange)
-            const intensity = 1 - (distance / attractionRadius);
-            // Using ayu-orange color values: #FFD280 (255, 210, 128)
-            // Closer to cursor = more orange, farther = more white
-            const orangeR = 255;
-            const orangeG = Math.floor(128 + (210 - 128) * intensity);
-            const orangeB = Math.floor(255 - (255 - 128) * intensity);
-            objectColor = `rgba(${orangeR}, ${orangeG}, ${orangeB}, 0.9)`;
-          } else {
-            // Apply gravity when outside cursor influence
-            const gravity = 0.2;
-            newVy += gravity;
-            objectColor = 'rgba(255, 210, 128, 0.7)'; // Light ayu-orange when falling
-          }
-          
-          // Apply damping to prevent infinite acceleration
-          const damping = 0.99;
-          const dampedVx = newVx * damping;
-          const dampedVy = newVy * damping;
-          
-          // Update position
-          let newX = obj.x + dampedVx;
-          let newY = obj.y + dampedVy;
-          let finalVx = dampedVx;
-          let finalVy = dampedVy;
-          
-          // Boundary collision with velocity reflection
-          if (newX < obj.radius) {
-            newX = obj.radius;
-            finalVx = -finalVx * 0.8; // Bounce with some energy loss
-          } else if (newX > window.innerWidth - obj.radius) {
-            newX = window.innerWidth - obj.radius;
-            finalVx = -finalVx * 0.8;
-          }
-          
-          if (newY < obj.radius) {
-            newY = obj.radius;
-            finalVy = -finalVy * 0.8;
-          } else if (newY > (window.innerHeight * 0.85) - obj.radius) {
-            newY = (window.innerHeight * 0.85) - obj.radius;
-            finalVy = -finalVy * 0.8; // Bounce off bottom
-          }
-          
-          return {
-            ...obj,
-            x: newX,
-            y: newY,
-            vx: finalVx,
-            vy: finalVy,
-            color: objectColor,
-          };
+    
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      // On the first resize, initialize the worker.
+      if (!latestDataBuffer.current) {
+        worker.postMessage({
+          type: 'init',
+          payload: { width: canvas.width, height: canvas.height },
         });
+      } else {
+        // On subsequent resizes, just notify the worker of the new dimensions.
+        worker.postMessage({
+          type: 'resize',
+          payload: { width: canvas.width, height: canvas.height },
+        });
+      }
+    };
+    resizeCanvas();
+    
+    const animate = () => {
+      // The guard clause now works perfectly. If the ref is null, we wait.
+      if (!latestDataBuffer.current) {
+        animationFrameId.current = requestAnimationFrame(animate);
+        return;
+      }
 
-        // Collision detection and response
-        for (let i = 0; i < newObjects.length; i++) {
-          for (let j = i + 1; j < newObjects.length; j++) {
-            const objA = newObjects[i];
-            const objB = newObjects[j];
-            
-            const dx = objB.x - objA.x;
-            const dy = objB.y - objA.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const minDistance = objA.radius + objB.radius;
-            
-            if (distance < minDistance && distance > 0) {
-              // Collision detected - resolve overlap and velocities
-              
-              // Normalize collision vector
-              const nx = dx / distance;
-              const ny = dy / distance;
-              
-              // Separate objects to prevent overlap
-              const overlap = minDistance - distance;
-              const separationX = (overlap / 2) * nx;
-              const separationY = (overlap / 2) * ny;
-              
-              objA.x -= separationX;
-              objA.y -= separationY;
-              objB.x += separationX;
-              objB.y += separationY;
-              
-              // Calculate relative velocity
-              const relativeVelX = objB.vx - objA.vx;
-              const relativeVelY = objB.vy - objA.vy;
-              
-              // Calculate relative velocity along collision normal
-              const velAlongNormal = relativeVelX * nx + relativeVelY * ny;
-              
-              // Don't resolve if velocities are separating
-              if (velAlongNormal > 0) continue;
-              
-              // Calculate restitution (bounciness)
-              const restitution = 0.8;
-              
-              // Calculate impulse scalar
-              const impulse = -(1 + restitution) * velAlongNormal;
-              const totalMass = objA.mass + objB.mass;
-              const impulseScalar = impulse / totalMass;
-              
-              // Apply impulse to velocities
-              objA.vx -= impulseScalar * objB.mass * nx;
-              objA.vy -= impulseScalar * objB.mass * ny;
-              objB.vx += impulseScalar * objA.mass * nx;
-              objB.vy += impulseScalar * objA.mass * ny;
-            }
-          }
-        }
+      // Take ownership of the buffer for this frame.
+      const bufferToProcess = latestDataBuffer.current;
+      // Immediately nullify the ref. This signals that we've consumed this
+      // buffer and are waiting for the next one from the worker.
+      latestDataBuffer.current = null;
 
-        return newObjects;
-      });
+      // Create a typed view into our local buffer to read the data.
+      const data = new Float32Array(bufferToProcess);
+      const numObjects = data.length / 7;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      for (let i = 0; i < numObjects; i++) {
+        const offset = i * 7;
+        const x = data[offset];
+        const y = data[offset + 1];
+        const radius = data[offset + 2];
+        const r = data[offset + 3];
+        const g = data[offset + 4];
+        const b = data[offset + 5];
+        const a = data[offset + 6];
+
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a})`;
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // IMPORTANT: Transfer our local buffer variable back to the worker.
+      worker.postMessage({ type: 'bufferBack', payload: bufferToProcess }, [bufferToProcess]);
       
       animationFrameId.current = requestAnimationFrame(animate);
     };
+    animate();
 
-    animationFrameId.current = requestAnimationFrame(animate);
+    const handleMouseEvent = (e: MouseEvent) => {
+      // For any mouse event, package the necessary info and send it to the worker.
+      worker.postMessage({
+        type: 'updateMouse',
+        payload: {
+          mousePos: { x: e.clientX, y: e.clientY },
+          isMouseDown: e.buttons === 1, // 'buttons' is a bitmask; 1 means primary button is down
+        },
+      });
+    };
 
-    // Cleanup function
+    // We can combine all mouse event listeners into one handler.
+    window.addEventListener('mousemove', handleMouseEvent);
+    window.addEventListener('mousedown', handleMouseEvent);
+    window.addEventListener('mouseup', handleMouseEvent);
+    window.addEventListener('resize', resizeCanvas);
+
+    // Cleanup function: very important to terminate the worker!
     return () => {
-      console.log('[PhysicsCanvas] Component unmounted: Cleaning up animation.');
-      window.removeEventListener('mousemove', handleMouseMove);
+      console.log('[PhysicsCanvas] Unmounting: Terminating worker.');
+      window.removeEventListener('mousemove', handleMouseEvent);
+      window.removeEventListener('mousedown', handleMouseEvent);
+      window.removeEventListener('mouseup', handleMouseEvent);
+      window.removeEventListener('resize', resizeCanvas);
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
-        console.log('[PhysicsCanvas] Animation frame successfully cancelled.');
       }
+      // This stops the worker script from running in the background.
+      worker.terminate();
     };
-  }, []); // Empty dependency array ensures this runs only once
+  }, []);
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -1 }}>
-      {objects.map((obj) => (
-        <div
-          key={obj.id}
-          className="flying-object"
-          style={{
-            left: `${obj.x - obj.radius}px`,
-            top: `${obj.y - obj.radius}px`,
-            width: `${obj.radius * 2}px`,
-            height: `${obj.radius * 2}px`,
-            backgroundColor: obj.color,
-          }}
-        />
-      ))}
-    </div>
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        zIndex: -1,
+        display: 'block',
+      }}
+    />
   );
 };
 
