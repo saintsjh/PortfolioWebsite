@@ -424,7 +424,7 @@ const RenderedObject: React.FC<{ object: PhysicsObject }> = ({ object }) => {
   
   if (object.content && object.content.type === 'char') {
     let className = 'physics-character';
-    let charStyle: React.CSSProperties = { ...style };
+    const charStyle: React.CSSProperties = { ...style };
     if (object.content.char === ' ') {
       charStyle.minWidth = '0.25rem';
     }
