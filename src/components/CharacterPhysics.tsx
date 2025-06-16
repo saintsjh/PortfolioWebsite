@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import Image from 'next/image';
-import { HomeContentItem } from '@/app/home-content';
+import { HomeContentItem, getRandomGreeting } from '@/app/home-content';
 
 // --- TYPE DEFINITIONS ---
 
 // The atomic unit: a single character or a single image.
 type DeconstructedItem =
-  | { type: 'char'; char: string; style: 'heading' | 'paragraph' | 'link' }
+  | { type: 'char'; char: string; style: 'heading' | 'paragraph' | 'link' | 'number' | 'greeting' }
   | { type: 'image'; src: string; alt: string };
 
 // The state for each individual physics object.
@@ -34,15 +34,28 @@ interface CharacterPhysicsProps {
 // --- UTILITY FUNCTION ---
 
 // Deconstructs the page content into a flat list of characters and images.
-const deconstructContent = (content: HomeContentItem[]): DeconstructedItem[] => {
+const deconstructContent = (content: HomeContentItem[], randomHello: string): DeconstructedItem[] => {
   const deconstructed: DeconstructedItem[] = [];
+  
   content.forEach(item => {
     if (item.type === 'section') {
       const style = item.body.type === 'heading' ? 'heading' : 'paragraph';
       if (item.body.type === 'heading') {
-        item.body.text.split('').forEach(char => {
-          deconstructed.push({ type: 'char', char, style });
-        });
+        // Handle the greeting specially - split into greeting and rest
+        if (item.body.text.includes('Hello, I am Jesse Herrera')) {
+          // Add greeting characters with 'greeting' style
+          randomHello.split('').forEach(char => {
+            deconstructed.push({ type: 'char', char, style: 'greeting' });
+          });
+          // Add the rest with 'heading' style
+          ', I am Jesse Herrera'.split('').forEach(char => {
+            deconstructed.push({ type: 'char', char, style });
+          });
+        } else {
+          item.body.text.split('').forEach(char => {
+            deconstructed.push({ type: 'char', char, style });
+          });
+        }
       } else if (item.body.type === 'paragraph') {
         const { text, text2, text3 } = item.body;
         text.split('').forEach(char => deconstructed.push({ type: 'char', char, style }));
@@ -54,9 +67,24 @@ const deconstructContent = (content: HomeContentItem[]): DeconstructedItem[] => 
         }
       }
     } else if (item.type === 'listItem') {
-      item.text.split('').forEach(char => {
-        deconstructed.push({ type: 'char', char, style: 'link' });
-      });
+      // Check if text starts with a number pattern (e.g., "00. ")
+      const match = item.text.match(/^(\d+\.\s)(.+)$/);
+      if (match) {
+        const number = match[1];
+        const projectName = match[2];
+        // Mark number characters as 'number' style
+        number.split('').forEach(char => {
+          deconstructed.push({ type: 'char', char, style: 'number' });
+        });
+        // Mark project name characters as 'link' style
+        projectName.split('').forEach(char => {
+          deconstructed.push({ type: 'char', char, style: 'link' });
+        });
+      } else {
+        item.text.split('').forEach(char => {
+          deconstructed.push({ type: 'char', char, style: 'link' });
+        });
+      }
     } 
     // The image is no longer deconstructed into a physics object
   });
@@ -73,11 +101,14 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
   const mousePos = useRef({ x: 0, y: 0 });
   const animationFrameId = useRef<number | null>(null);
 
+  // Get a single random greeting and store it in a ref so it's consistent.
+  const randomHello = useRef(getRandomGreeting()).current;
+
   // Extract the image from the content to be rendered separately.
   const imageItem = content.find(item => item.type === 'image');
 
   // Memoize the deconstructed content to avoid re-computation.
-  const deconstructed = useRef(deconstructContent(content)).current;
+  const deconstructed = useRef(deconstructContent(content, randomHello)).current;
 
   // Phase 1: Measure the layout, then set the state to 'settled'.
   useLayoutEffect(() => {
@@ -327,8 +358,8 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
               className="profile-image"
               src={imageItem.src}
               alt={imageItem.alt}
-              width={400}
-              height={400}
+              width={500}
+              height={500}
               style={{ opacity: physicsState !== 'measuring' ? 1 : 0, transition: 'opacity 0.5s' }}
             />
           )}
@@ -371,7 +402,7 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
             pointerEvents: 'none' 
           }}
         >
-          <BlueprintRenderer content={content} />
+          <BlueprintRenderer content={content} randomHello={randomHello} />
         </div>
       )}
     </div>
@@ -387,21 +418,33 @@ const RenderedObject: React.FC<{ object: PhysicsObject }> = ({ object }) => {
     top: 0,
     transform: `translate(${object.x}px, ${object.y}px) rotate(${object.rotation}deg)`,
     color: 'var(--ayu-fg)',
-    minWidth: object.content.type === 'char' && object.content.char === ' ' ? '0.25rem' : 'auto',
+    minWidth: 'auto', // Simplified to avoid potential errors on undefined content
     display: 'inline-block',
   };
   
-  if (object.content.type === 'char') {
+  if (object.content && object.content.type === 'char') {
     let className = 'physics-character';
+    let charStyle: React.CSSProperties = { ...style };
+    if (object.content.char === ' ') {
+      charStyle.minWidth = '0.25rem';
+    }
     if (object.content.style === 'heading') className = 'physics-character main-heading';
     if (object.content.style === 'link') className = 'physics-character list-item';
-    return <span style={style} className={className}>{object.content.char}</span>;
+    if (object.content.style === 'number') {
+      className = 'physics-character list-item';
+      charStyle.color = 'var(--ayu-orange)';
+    }
+    if (object.content.style === 'greeting') {
+      className = 'physics-character main-heading';
+      charStyle.color = 'var(--ayu-orange)';
+    }
+    return <span style={charStyle} className={className}>{object.content.char}</span>;
   }
 
   return null;
 };
 
-const BlueprintRenderer: React.FC<{ content: HomeContentItem[] }> = ({ content }) => {
+const BlueprintRenderer: React.FC<{ content: HomeContentItem[], randomHello: string }> = ({ content, randomHello }) => {
   let charIndex = 0;
   const imageItem = content.find(item => item.type === 'image');
 
@@ -414,7 +457,24 @@ const BlueprintRenderer: React.FC<{ content: HomeContentItem[] }> = ({ content }
             return (
               <div className="content-section" key={`section-${index}`}>
                 <div className="section-body">
-                  {item.body.type === 'heading' && <h1 className="main-heading">{item.body.text.split('').map(char => <span key={charIndex} data-id={charIndex++}>{char}</span>)}</h1>}
+                  {item.body.type === 'heading' && (
+                    <h1 className="main-heading">
+                      {item.body.text.includes('Hello, I am Jesse Herrera') ? (
+                        <>
+                          {randomHello.split('').map(char => (
+                            <span key={charIndex} data-id={charIndex++} style={{ color: 'var(--ayu-orange)' }}>{char}</span>
+                          ))}
+                          {', I am Jesse Herrera'.split('').map(char => (
+                            <span key={charIndex} data-id={charIndex++}>{char}</span>
+                          ))}
+                        </>
+                      ) : (
+                        item.body.text.split('').map(char => (
+                          <span key={charIndex} data-id={charIndex++}>{char}</span>
+                        ))
+                      )}
+                    </h1>
+                  )}
                   {item.body.type === 'paragraph' && (
                     <>
                       <p>{item.body.text.split('').map(char => <span key={charIndex} data-id={charIndex++}>{char}</span>)}</p>
@@ -434,11 +494,24 @@ const BlueprintRenderer: React.FC<{ content: HomeContentItem[] }> = ({ content }
             <ul style={{ listStyleType: 'none', padding: 0, margin: 0, marginTop: '2rem' }}>
               {content.map((item, index) => {
                 if (item.type === 'listItem') {
+                  // Check if text starts with a number pattern
+                  const match = item.text.match(/^(\d+\.\s)(.+)$/);
                   return (
                     <li className="list-item" key={index} style={{ marginBottom: '0.5rem' }}>
-                      {item.text.split('').map(char => (
-                        <span key={charIndex} data-id={charIndex++}>{char}</span>
-                      ))}
+                      {match ? (
+                        <>
+                          {match[1].split('').map(char => (
+                            <span key={charIndex} data-id={charIndex++} className="project-number">{char}</span>
+                          ))}
+                          {match[2].split('').map(char => (
+                            <span key={charIndex} data-id={charIndex++}>{char}</span>
+                          ))}
+                        </>
+                      ) : (
+                        item.text.split('').map(char => (
+                          <span key={charIndex} data-id={charIndex++}>{char}</span>
+                        ))
+                      )}
                     </li>
                   );
                 }
@@ -451,7 +524,7 @@ const BlueprintRenderer: React.FC<{ content: HomeContentItem[] }> = ({ content }
       {/* Render the static image in the blueprint to ensure correct text flow */}
       <div className="image-content">
         {imageItem && imageItem.type === 'image' &&
-            <Image className="profile-image" src={imageItem.src} alt={imageItem.alt} width={400} height={400} />
+            <Image className="profile-image" src={imageItem.src} alt={imageItem.alt} width={500} height={500} />
         }
       </div>
     </div>

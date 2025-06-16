@@ -1,9 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import TypingEffect from "@/components/TypingEffect";
-import { homeContent } from './home-content'; // Import the content data
+import { homeContent, getRandomGreeting } from './home-content'; // Import the content data
 
 export default function Home() {
+  // Get random greeting on component render
+  const randomHello = getRandomGreeting();
+  
   return (
     <main>
       <header className="nav-header">
@@ -21,7 +24,6 @@ export default function Home() {
       </header>
       <div className="main-content-container">
         <div className="text-content">
-          {/* Render Sections */}
           {homeContent.map((item, index) => {
             if (item.type === 'section') {
               return (
@@ -29,7 +31,10 @@ export default function Home() {
                   <div className="section-body">
                     {item.body.type === 'heading' && (
                       <h1 className="main-heading">
-                        <TypingEffect text={item.body.text} showBlinkingCursor={item.body.showBlinkingCursor} />
+                        <span style={{ color: 'var(--ayu-orange)' }}>
+                          <TypingEffect text={`${randomHello},`} />
+                        </span>
+                        <TypingEffect text=" I am Jesse Herrera" showBlinkingCursor={item.body.showBlinkingCursor} />
                       </h1>
                     )}
                     {item.body.type === 'paragraph' && (
@@ -49,10 +54,22 @@ export default function Home() {
               <ul>
                 {homeContent.map((item, index) => {
                   if (item.type === 'listItem') {
+                    // Extract number and project name
+                    const match = item.text.match(/^(\d+\.\s)(.+)$/);
+                    const number = match ? match[1] : '';
+                    const projectName = match ? match[2] : item.text;
+                    
                     return (
                       <li className="list-item" key={index}>
                         <a href={item.href}>
-                          <TypingEffect text={item.text} />
+                          {match ? (
+                            <>
+                              <span className="project-number">{number}</span>
+                              <TypingEffect text={projectName} />
+                            </>
+                          ) : (
+                            <TypingEffect text={item.text} />
+                          )}
                         </a>
                       </li>
                     );
@@ -67,7 +84,7 @@ export default function Home() {
         <div className="image-content">
           {homeContent.map((item, index) => {
             if (item.type === 'image') {
-              return <Image key={index} className="profile-image" src={item.src} alt={item.alt} width={400} height={400} />;
+              return <Image key={index} className="profile-image" src={item.src} alt={item.alt} width={500} height={500} />;
             }
             return null;
           })}

@@ -33,6 +33,36 @@ interface ImageContent {
 
 export type HomeContentItem = SectionContent | ImageContent | ListItemContent;
 
+// Collection of "Hello" greetings in different languages
+const greetings = [
+  'Hello',
+  'Hola',
+  'Bonjour',
+  'Hallo',
+  'Ciao',
+  'Olá',
+  'Привет',
+  '你好',
+  'こんにちは',
+  '안녕하세요',
+  'مرحبا',
+  'नमस्ते',
+  'Hej',
+  'Hei',
+  'Γεια σας',
+  'Merhaba',
+  'Shalom',
+  'Sawubona',
+  'Jambo',
+  'Aloha'
+];
+
+// Function to get a random greeting
+export const getRandomGreeting = (): string => {
+  const randomIndex = Math.floor(Math.random() * greetings.length);
+  return greetings[randomIndex].trim().replace(/\s+/g, ' ').trim();
+};
+
 // The actual content for the homepage
 export const homeContent: HomeContentItem[] = [
   {
