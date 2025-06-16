@@ -223,7 +223,9 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
               obj.y += obj.vy * dt;
               const boundaryPadding = obj.radius;
               // Constrain text to the left side (approximately 75% of screen width to match homepage layout)
-              const maxTextWidth = window.innerWidth * 0.75;
+              // On mobile, adjust for smaller proportions
+              const isMobile = window.innerWidth <= 768;
+              const maxTextWidth = isMobile ? window.innerWidth * 0.65 : window.innerWidth * 0.75;
               if (obj.x < boundaryPadding) { obj.x = boundaryPadding; obj.vx *= -0.5; }
               if (obj.x > maxTextWidth - boundaryPadding) { obj.x = maxTextWidth - boundaryPadding; obj.vx *= -0.5; }
               if (obj.y < boundaryPadding) { obj.y = boundaryPadding; obj.vy *= -0.5; }
