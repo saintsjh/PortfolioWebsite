@@ -8,7 +8,7 @@ import { HomeContentItem, getRandomGreeting } from '@/app/home-content';
 
 // The atomic unit: a single character or a single image.
 type DeconstructedItem =
-  | { type: 'char'; char: string; style: 'heading' | 'paragraph' | 'link' | 'number' | 'greeting' }
+  | { type: 'char'; char: string; style: 'heading' | 'paragraph' | 'link' | 'number' | 'greeting' | 'section-heading' }
   | { type: 'image'; src: string; alt: string };
 
 // The state for each individual physics object.
@@ -39,6 +39,13 @@ const deconstructContent = (content: HomeContentItem[], randomHello: string): De
   
   content.forEach(item => {
     if (item.type === 'section') {
+      // Add section heading characters if they exist
+      if (item.heading && item.heading.trim() !== '') {
+        item.heading.split('').forEach(char => {
+          deconstructed.push({ type: 'char', char, style: 'section-heading' });
+        });
+      }
+      
       const style = item.body.type === 'heading' ? 'heading' : 'paragraph';
       if (item.body.type === 'heading') {
         // Handle the greeting specially - split into greeting and rest
@@ -67,6 +74,13 @@ const deconstructContent = (content: HomeContentItem[], randomHello: string): De
         }
       }
     } else if (item.type === 'listItem') {
+      // Add "Projs" heading only once for the first list item
+      if (item === content.find(i => i.type === 'listItem')) {
+        'Projs'.split('').forEach(char => {
+          deconstructed.push({ type: 'char', char, style: 'section-heading' });
+        });
+      }
+      
       // Check if text starts with a number pattern (e.g., "00. ")
       const match = item.text.match(/^(\d+\.\s)(.+)$/);
       if (match) {
@@ -438,6 +452,11 @@ const RenderedObject: React.FC<{ object: PhysicsObject }> = ({ object }) => {
       className = 'physics-character main-heading';
       charStyle.color = 'var(--ayu-orange)';
     }
+    if (object.content.style === 'section-heading') {
+      className = 'physics-character section-heading';
+      charStyle.color = 'var(--ayu-orange)';
+      charStyle.opacity = 0.7;
+    }
     return <span style={charStyle} className={className}>{object.content.char}</span>;
   }
 
@@ -450,12 +469,17 @@ const BlueprintRenderer: React.FC<{ content: HomeContentItem[], randomHello: str
 
   return (
     <div className="main-content-container">
-      <div className="text-content">
+      <div className="text-content" style={{ paddingLeft: '20px' }}>
         {/* Render Sections with character spans for measurement */}
         {content.map((item, index) => {
           if (item.type === 'section') {
             return (
               <div className="content-section" key={`section-${index}`}>
+                <div className="section-heading">
+                  {item.heading && item.heading.trim() !== '' && item.heading.split('').map(char => (
+                    <span key={charIndex} data-id={charIndex++}>{char}</span>
+                  ))}
+                </div>
                 <div className="section-body">
                   {item.body.type === 'heading' && (
                     <h1 className="main-heading">
@@ -490,6 +514,11 @@ const BlueprintRenderer: React.FC<{ content: HomeContentItem[], randomHello: str
         })}
         {/* Render List with character spans for measurement */}
         <div className="content-section">
+          <div className="section-heading">
+            {'Projs'.split('').map(char => (
+              <span key={charIndex} data-id={charIndex++}>{char}</span>
+            ))}
+          </div>
           <div className="section-body">
             <ul style={{ listStyleType: 'none', padding: 0, margin: 0, marginTop: '2rem' }}>
               {content.map((item, index) => {

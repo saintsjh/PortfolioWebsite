@@ -66,16 +66,19 @@ const PhysicsCanvas = () => {
             newVx += normalizedDx * attractionForce;
             newVy += normalizedDy * attractionForce;
             
-            // Calculate red intensity based on distance (closer = more red)
+            // Calculate orange intensity based on distance (closer = more orange)
             const intensity = 1 - (distance / attractionRadius);
-            const redValue = Math.floor(255 * intensity);
-            const otherValues = Math.floor(255 * (1 - intensity * 0.8)); // Keep some white/blue
-            objectColor = `rgba(${redValue}, ${otherValues}, ${otherValues}, 0.9)`;
+            // Using ayu-orange color values: #FFD280 (255, 210, 128)
+            // Closer to cursor = more orange, farther = more white
+            const orangeR = 255;
+            const orangeG = Math.floor(128 + (210 - 128) * intensity);
+            const orangeB = Math.floor(255 - (255 - 128) * intensity);
+            objectColor = `rgba(${orangeR}, ${orangeG}, ${orangeB}, 0.9)`;
           } else {
             // Apply gravity when outside cursor influence
             const gravity = 0.2;
             newVy += gravity;
-            objectColor = 'rgba(200, 200, 255, 0.7)'; // Light blue when falling
+            objectColor = 'rgba(255, 210, 128, 0.7)'; // Light ayu-orange when falling
           }
           
           // Apply damping to prevent infinite acceleration

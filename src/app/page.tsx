@@ -28,6 +28,12 @@ export default function Home() {
             if (item.type === 'section') {
               return (
                 <div className="content-section" key={index}>
+                  <div className="section-heading" style={{
+                    color: 'var(--ayu-orange)',
+                    opacity: 0.7
+                  }}>
+                    {item.heading}
+                  </div>
                   <div className="section-body">
                     {item.body.type === 'heading' && (
                       <h1 className="main-heading">
@@ -50,6 +56,12 @@ export default function Home() {
           })}
           {/* Render the Projects List Separately */}
           <div className="content-section">
+            <div className="section-heading" style={{
+              color: 'var(--ayu-orange)',
+              opacity: 0.7
+            }}>
+              Projs
+            </div>
             <div className="section-body">
               <ul>
                 {homeContent.map((item, index) => {

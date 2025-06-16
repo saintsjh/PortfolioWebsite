@@ -34,7 +34,7 @@ interface ImageContent {
 export type HomeContentItem = SectionContent | ImageContent | ListItemContent;
 
 // Collection of "Hello" greetings in different languages
-const greetings = [
+export const greetings = [
   'Hello',
   'Hola',
   'Bonjour',
