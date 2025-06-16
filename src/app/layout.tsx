@@ -8,8 +8,9 @@ const firaCode = Fira_Code({
 });
 
 export const metadata: Metadata = {
-  title: "Jesse Herrera's Resume",
-  description: "The resume website for Jesse Herrera",
+  title: "Jesse Herrera - Portfolio",
+  description: "Personal portfolio website showcasing my work and projects",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
 };
 
 export default function RootLayout({
@@ -19,7 +20,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={firaCode.variable}>{children}</body>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+      </head>
+      <body className={`${firaCode.variable} antialiased`}>
+        {children}
+      </body>
     </html>
   );
 }

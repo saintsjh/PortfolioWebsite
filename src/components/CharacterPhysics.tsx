@@ -128,7 +128,23 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
     const handleMouseMove = (event: MouseEvent) => {
       mousePos.current = { x: event.clientX, y: event.clientY };
     };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (event.touches.length > 0) {
+        event.preventDefault(); // Prevent scrolling
+        mousePos.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+      }
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      if (event.touches.length > 0) {
+        mousePos.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+      }
+    };
+
     window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove);
+    window.addEventListener('touchstart', handleTouchStart);
 
     const animate = () => {
       if (physicsState === 'active') { // Only run simulation if active
@@ -276,6 +292,8 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
     animationFrameId.current = requestAnimationFrame(animate);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchstart', handleTouchStart);
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
   }, [physicsState]); // Rerun effect if state changes
