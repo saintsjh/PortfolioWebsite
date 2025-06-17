@@ -1,11 +1,22 @@
+'use client';
+
 import Link from "next/link";
 import Image from "next/image";
 import TypingEffect from "@/components/TypingEffect";
 import { homeContent, getRandomGreeting } from './home-content'; // Import the content data
+import { useMediaQuery } from 'react-responsive';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
-  // Get random greeting on component render
   const randomHello = getRandomGreeting();
+  const [isMounted, setIsMounted] = useState(false);
+  const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
+  const image = (isMounted && isMobile) ? '/imgs/JH(2).png' : '/imgs/IMG_2635.jpeg';
   
   return (
     <main>
@@ -54,7 +65,6 @@ export default function Home() {
             }
             return null;
           })}
-          {/* Render the Projects List Separately */}
           <div className="content-section">
             <div className="section-heading" style={{
               color: 'var(--ayu-orange)',
@@ -66,7 +76,6 @@ export default function Home() {
               <ul>
                 {homeContent.map((item, index) => {
                   if (item.type === 'listItem') {
-                    // Extract number and project name
                     const match = item.text.match(/^(\d+\.\s)(.+)$/);
                     const number = match ? match[1] : '';
                     const projectName = match ? match[2] : item.text;
@@ -92,14 +101,8 @@ export default function Home() {
             </div>
           </div>
         </div>
-        {/* Render the Image */}
         <div className="image-content">
-          {homeContent.map((item, index) => {
-            if (item.type === 'image') {
-              return <Image key={index} className="profile-image" src={item.src} alt={item.alt} width={500} height={500} />;
-            }
-            return null;
-          })}
+          <Image src={image} className="profile-image" alt="Jesse Herrera" width={500} height={500} />
         </div>
       </div>
     </main>

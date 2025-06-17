@@ -30,8 +30,13 @@ interface ImageContent {
   src: string;
   alt: string;
 }
+interface ImageContent2 {
+  type: 'image2';
+  src: string;
+  alt: string;
+}
 
-export type HomeContentItem = SectionContent | ImageContent | ListItemContent;
+export type HomeContentItem = SectionContent | ImageContent | ListItemContent | ImageContent2;
 
 // Collection of "Hello" greetings in different languages
 export const greetings = [
@@ -84,6 +89,7 @@ export const homeContent: HomeContentItem[] = [
       text3: 'technologies like React, Next.js, Tailwind CSS, TypeScript, .Net, and more.'
     },
   },
+
   { type: 'listItem', heading: 'Projs.', text: '00. AWS CloudSharing Project', href: 'https://github.com/saintsjh/AwsCloudSharing' },
   { type: 'listItem', heading: 'Projs.', text: '01. PyFaceID Project', href: 'https://github.com/saintsjh/PyFaceID' },
   { type: 'listItem', heading: 'Projs.', text: '02. Employee Expense Reporting Information System', href: '' },
@@ -94,4 +100,9 @@ export const homeContent: HomeContentItem[] = [
     src: '/imgs/IMG_2635.jpeg',
     alt: 'Jesse Herrera',
   },
+  {
+    type: 'image2',
+    src: '/imgs/JH(2).png',
+    alt: 'Jesse Herrera',
+  }
 ]; 

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { HomeContentItem, getRandomGreeting } from '@/app/home-content';
+import { useMediaQuery } from 'react-responsive';
 
 // --- TYPE DEFINITIONS ---
 
@@ -34,7 +35,7 @@ interface CharacterPhysicsProps {
 // --- UTILITY FUNCTION ---
 
 // Deconstructs the page content into a flat list of characters and images.
-const deconstructContent = (content: HomeContentItem[], randomHello: string): DeconstructedItem[] => {
+const deconstructContent = (content: HomeContentItem[], randomHello: string, isMobile: boolean): DeconstructedItem[] => {
   const deconstructed: DeconstructedItem[] = [];
   
   content.forEach(item => {
@@ -64,13 +65,30 @@ const deconstructContent = (content: HomeContentItem[], randomHello: string): De
           });
         }
       } else if (item.body.type === 'paragraph') {
-        const { text, text2, text3 } = item.body;
-        text.split('').forEach(char => deconstructed.push({ type: 'char', char, style }));
-        if (text2) {
-          text2.split('').forEach(char => deconstructed.push({ type: 'char', char, style }));
-        }
-        if (text3) {
-          text3.split('').forEach(char => deconstructed.push({ type: 'char', char, style }));
+        if (isMobile) {
+          const mobileLines = [
+            "I have a passion for working with people",
+            "and building applications. I have",
+            "experience building full stack",
+            "applications and mobile apps. Using",
+            "technologies like React, Next.js,",
+            "Tailwind CSS, TypeScript, .Net, and more."
+          ];
+          mobileLines.forEach((line, index) => {
+            line.split('').forEach(char => deconstructed.push({ type: 'char', char, style: 'paragraph' }));
+            if (index < mobileLines.length - 1) {
+              deconstructed.push({ type: 'char', char: '\n', style: 'paragraph' });
+            }
+          });
+        } else {
+          const { text, text2, text3 } = item.body;
+          text.split('').forEach(char => deconstructed.push({ type: 'char', char, style }));
+          if (text2) {
+            text2.split('').forEach(char => deconstructed.push({ type: 'char', char, style }));
+          }
+          if (text3) {
+            text3.split('').forEach(char => deconstructed.push({ type: 'char', char, style }));
+          }
         }
       }
     } else if (item.type === 'listItem') {
@@ -114,19 +132,28 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mousePos = useRef({ x: 0, y: 0 });
   const animationFrameId = useRef<number | null>(null);
+  const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
+  const [isMounted, setIsMounted] = useState(false);
+  const [randomHello, setRandomHello] = useState('');
 
-  // Get a single random greeting and store it in a ref so it's consistent.
-  const randomHello = useRef(getRandomGreeting()).current;
+  useEffect(() => {
+    setIsMounted(true);
+    setRandomHello(getRandomGreeting());
+  }, []);
 
   // Extract the image from the content to be rendered separately.
-  const imageItem = content.find(item => item.type === 'image');
+  const imageItem = (isMounted && isMobile) ? '/imgs/JH(2).png' : '/imgs/IMG_2635.jpeg';
 
   // Memoize the deconstructed content to avoid re-computation.
-  const deconstructed = useRef(deconstructContent(content, randomHello)).current;
+  // CRITICAL: Only deconstruct AFTER the random greeting is set on the client.
+  const deconstructed = useMemo(() => {
+    if (!isMounted || !randomHello) return [];
+    return deconstructContent(content, randomHello, isMobile);
+  }, [isMounted, content, randomHello, isMobile]);
 
   // Phase 1: Measure the layout, then set the state to 'settled'.
   useLayoutEffect(() => {
-    if (physicsState !== 'measuring') return;
+    if (physicsState !== 'measuring' || deconstructed.length === 0) return;
 
     // Wait for fonts and give a minimal delay for any final CSS layout shifts.
     document.fonts.ready.then(() => {
@@ -136,14 +163,15 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
         const containerRect = containerRef.current.getBoundingClientRect();
         const measuredObjects: PhysicsObject[] = [];
         const elements = layoutRef.current.querySelectorAll('[data-id]');
+        const mobileYOffset = isMobile ? 50 : 0; // Add 50px offset on mobile
+        const mobileXOffset = isMobile ? -45 : 0; // Add -20px offset on mobile
 
         elements.forEach(element => {
           const id = parseInt(element.getAttribute('data-id')!, 10);
           const rect = element.getBoundingClientRect();
           
-          // CRITICAL FIX: Convert absolute viewport coordinates to coordinates relative to this component.
-          const homeX = rect.left - containerRect.left;
-          const homeY = rect.top - containerRect.top;
+          const homeX = rect.left - containerRect.left + mobileXOffset;
+          const homeY = rect.top - containerRect.top + mobileYOffset;
 
           measuredObjects.push({
             id: id,
@@ -267,10 +295,9 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
               obj.x += obj.vx * dt;
               obj.y += obj.vy * dt;
               const boundaryPadding = obj.radius;
-              // Constrain text to the left side (approximately 75% of screen width to match homepage layout)
-              // On mobile, adjust for smaller proportions
+              // Constrain text to the left side on desktop, but allow full width on mobile.
               const isMobile = window.innerWidth <= 768;
-              const maxTextWidth = isMobile ? window.innerWidth * 0.65 : window.innerWidth * 0.75;
+              const maxTextWidth = isMobile ? window.innerWidth : window.innerWidth * 0.75;
               if (obj.x < boundaryPadding) { obj.x = boundaryPadding; obj.vx *= -0.5; }
               if (obj.x > maxTextWidth - boundaryPadding) { obj.x = maxTextWidth - boundaryPadding; obj.vx *= -0.5; }
               if (obj.y < boundaryPadding) { obj.y = boundaryPadding; obj.vy *= -0.5; }
@@ -347,9 +374,6 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
 
 
   const activatePhysics = () => {
-    // By simply setting the state to 'active', we allow the existing animation
-    // loop to take over. The characters will start reacting to the mouse
-    // from their settled positions without an initial explosive force.
     setPhysicsState('active');
   };
 
@@ -367,11 +391,11 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
 
         {/* The static image, which is visible in ALL states except 'measuring' */}
         <div className="image-content">
-          {imageItem && imageItem.type === 'image' && (
+          {imageItem && (
             <Image
               className="profile-image"
-              src={imageItem.src}
-              alt={imageItem.alt}
+              src={imageItem}
+              alt="Jesse Herrera"
               width={500}
               height={500}
               style={{ opacity: physicsState !== 'measuring' ? 1 : 0, transition: 'opacity 0.5s' }}
@@ -399,7 +423,12 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
           In the 'settled' state, their x/y will match their homeX/homeY, so they look like static text.
       */}
       <div style={{ position: 'absolute', top: 0, left: 0 }}>
-        {objects.map(obj => <RenderedObject key={obj.id} object={obj} />)}
+        {objects.map(obj => {
+          if (obj.content.type === 'char' && obj.content.char === '\n') {
+            return null; // Don't render newline characters as physics objects
+          }
+          return <RenderedObject key={obj.id} object={obj} />;
+        })}
       </div>
 
       {/* Hidden blueprint for measurement */}
@@ -416,7 +445,7 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
             pointerEvents: 'none' 
           }}
         >
-          <BlueprintRenderer content={content} randomHello={randomHello} />
+          <BlueprintRenderer content={content} randomHello={randomHello} isMobile={isMobile} />
         </div>
       )}
     </div>
@@ -432,7 +461,7 @@ const RenderedObject: React.FC<{ object: PhysicsObject }> = ({ object }) => {
     top: 0,
     transform: `translate(${object.x}px, ${object.y}px) rotate(${object.rotation}deg)`,
     color: 'var(--ayu-fg)',
-    minWidth: 'auto', // Simplified to avoid potential errors on undefined content
+    minWidth: 'auto',
     display: 'inline-block',
   };
   
@@ -440,7 +469,7 @@ const RenderedObject: React.FC<{ object: PhysicsObject }> = ({ object }) => {
     let className = 'physics-character';
     const charStyle: React.CSSProperties = { ...style };
     if (object.content.char === ' ') {
-      charStyle.minWidth = '0.25rem';
+      charStyle.minWidth = '0.3em';
     }
     if (object.content.style === 'heading') className = 'physics-character main-heading';
     if (object.content.style === 'link') className = 'physics-character list-item';
@@ -463,13 +492,13 @@ const RenderedObject: React.FC<{ object: PhysicsObject }> = ({ object }) => {
   return null;
 };
 
-const BlueprintRenderer: React.FC<{ content: HomeContentItem[], randomHello: string }> = ({ content, randomHello }) => {
+const BlueprintRenderer: React.FC<{ content: HomeContentItem[], randomHello: string, isMobile: boolean }> = ({ content, randomHello, isMobile }) => {
   let charIndex = 0;
   const imageItem = content.find(item => item.type === 'image');
 
   return (
     <div className="main-content-container">
-      <div className="text-content" style={{ paddingLeft: '20px' }}>
+      <div className="text-content" style={{ paddingLeft: '6px' }}>
         {/* Render Sections with character spans for measurement */}
         {content.map((item, index) => {
           if (item.type === 'section') {
@@ -500,11 +529,29 @@ const BlueprintRenderer: React.FC<{ content: HomeContentItem[], randomHello: str
                     </h1>
                   )}
                   {item.body.type === 'paragraph' && (
-                    <>
-                      <p>{item.body.text.split('').map(char => <span key={charIndex} data-id={charIndex++}>{char}</span>)}</p>
-                      {item.body.text2 && <p style={{ marginTop: '1rem' }}>{item.body.text2.split('').map(char => <span key={charIndex} data-id={charIndex++}>{char}</span>)}</p>}
-                      {item.body.text3 && <p style={{ marginTop: '1rem' }}>{item.body.text3.split('').map(char => <span key={charIndex} data-id={charIndex++}>{char}</span>)}</p>}
-                    </>
+                    <div className="section-body">
+                      {isMobile ? (
+                        <div>
+                          {"I have a passion for working with people".split('').map(char => <span key={charIndex} data-id={charIndex++}>{char}</span>)}
+                          <span data-id={charIndex++} style={{ display: 'none' }}>{'\n'}</span><br />
+                          {"and building applications. I have".split('').map(char => <span key={charIndex} data-id={charIndex++}>{char}</span>)}
+                          <span data-id={charIndex++} style={{ display: 'none' }}>{'\n'}</span><br />
+                          {"experience building full stack".split('').map(char => <span key={charIndex} data-id={charIndex++}>{char}</span>)}
+                          <span data-id={charIndex++} style={{ display: 'none' }}>{'\n'}</span><br />
+                          {"applications and mobile apps. Using".split('').map(char => <span key={charIndex} data-id={charIndex++}>{char}</span>)}
+                          <span data-id={charIndex++} style={{ display: 'none' }}>{'\n'}</span><br />
+                          {"technologies like React, Next.js,".split('').map(char => <span key={charIndex} data-id={charIndex++}>{char}</span>)}
+                          <span data-id={charIndex++} style={{ display: 'none' }}>{'\n'}</span><br />
+                          {"Tailwind CSS, TypeScript, .Net, and more.".split('').map(char => <span key={charIndex} data-id={charIndex++}>{char}</span>)}
+                        </div>
+                      ) : (
+                        <>
+                          <p>{item.body.text.split('').map(char => <span key={charIndex} data-id={charIndex++}>{char}</span>)}</p>
+                          {item.body.text2 && <p style={{ marginTop: '1rem' }}>{item.body.text2.split('').map(char => <span key={charIndex} data-id={charIndex++}>{char}</span>)}</p>}
+                          {item.body.text3 && <p style={{ marginTop: '1rem' }}>{item.body.text3.split('').map(char => <span key={charIndex} data-id={charIndex++}>{char}</span>)}</p>}
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -523,7 +570,6 @@ const BlueprintRenderer: React.FC<{ content: HomeContentItem[], randomHello: str
             <ul style={{ listStyleType: 'none', padding: 0, margin: 0, marginTop: '2rem' }}>
               {content.map((item, index) => {
                 if (item.type === 'listItem') {
-                  // Check if text starts with a number pattern
                   const match = item.text.match(/^(\d+\.\s)(.+)$/);
                   return (
                     <li className="list-item" key={index} style={{ marginBottom: '0.5rem' }}>
