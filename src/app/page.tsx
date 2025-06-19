@@ -55,9 +55,21 @@ export default function Home() {
                       </h1>
                     )}
                     {item.body.type === 'paragraph' && (
-                      <p>
-                        <TypingEffect text={[item.body.text, item.body.text2, item.body.text3].filter(Boolean).join(' ')} />
-                      </p>
+                      <>
+                        <p>
+                          <TypingEffect text={item.body.text} />
+                        </p>
+                        {item.body.text2 && (
+                          <p style={{ marginTop: '1rem' }}>
+                            <TypingEffect text={item.body.text2} />
+                          </p>
+                        )}
+                        {item.body.text3 && (
+                          <p style={{ marginTop: '1rem' }}>
+                            <TypingEffect text={item.body.text3} />
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

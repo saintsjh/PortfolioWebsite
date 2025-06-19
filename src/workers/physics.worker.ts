@@ -1,6 +1,5 @@
 /// <reference lib="webworker" />
 
-// Enhanced interface to include color components directly
 interface FlyingObject {
   id: number;
   x: number;
@@ -23,23 +22,21 @@ let mousePos = { x: 0, y: 0 };
 let isMouseDown = false;
 let NUM_OBJECTS = 0; // Will now be set dynamically on 'init'
 
-// OPTIMIZATION: Pre-calculate the squared attraction radii to avoid Math.sqrt()
+
 let attractionRadiusSq = 200 * 200;
 let attractionRadius = 200; // Keep the actual radius for intensity calculations
 
-// ANTI-TUNNELING: Maximum velocity to prevent particles from moving too fast
+// ANTI-TUNNELING
 const MAX_VELOCITY = 8; // Adjust this value to control maximum speed
 const MAX_VELOCITY_SQ = MAX_VELOCITY * MAX_VELOCITY;
 
-// OPTIMIZATION: Create reusable data structures to avoid allocations
-// Use a BigInt for the key to avoid string allocations
 const grid = new Map<bigint, FlyingObject[]>();
 
-// OPTIMIZATION: These will be initialized in the 'init' handler based on NUM_OBJECTS.
+// OPTIMIZATION
 let renderData: Float32Array;
 let dataBuffer: ArrayBuffer;
 
-// ANTI-TUNNELING: Helper function to clamp velocity
+// ANTI-TUNNELING
 function clampVelocity(vx: number, vy: number): [number, number] {
   const velocitySq = vx * vx + vy * vy;
   if (velocitySq > MAX_VELOCITY_SQ) {
@@ -50,7 +47,6 @@ function clampVelocity(vx: number, vy: number): [number, number] {
   return [vx, vy];
 }
 
-// Helper function containing the actual collision physics.
 function checkAndResolveCollision(objA: FlyingObject, objB: FlyingObject) {
   const dx = objB.x - objA.x;
   const dy = objB.y - objA.y;
@@ -85,7 +81,7 @@ function checkAndResolveCollision(objA: FlyingObject, objB: FlyingObject) {
   }
 }
 
-// OPTIMIZATION: Populate the flat data buffer for rendering.
+// OPTIMIZATION
 function populateRenderBuffer(objects: FlyingObject[], renderDataView: Float32Array) {
   for (let i = 0; i < objects.length; i++) {
     const obj = objects[i];
@@ -100,7 +96,6 @@ function populateRenderBuffer(objects: FlyingObject[], renderDataView: Float32Ar
   }
 }
 
-// The main loop of the physics engine. It runs continuously.
 function runSimulation() {
   const renderDataView = new Float32Array(dataBuffer);
 
@@ -190,12 +185,10 @@ function runSimulation() {
     obj.vy = finalVy;
   }
 
-  // A SINGLE, EFFICIENT SORT: Sort the entire object list by x-coordinate once.
   objects.sort((a, b) => a.x - b.x);
 
   grid.clear();
 
-  // LINEAR-TIME GRID CONSTRUCTION: Build the grid from the pre-sorted list.
   const cellSize = 6;
   for (const obj of objects) {
     const cellX = Math.floor(obj.x / cellSize);
@@ -208,7 +201,6 @@ function runSimulation() {
   }
   
   for (const [key, objectsInCell] of grid) {
-    // Intra-cell collisions
     for (let i = 0; i < objectsInCell.length; i++) {
       const objA = objectsInCell[i];
       for (let j = i + 1; j < objectsInCell.length; j++) {
@@ -220,7 +212,6 @@ function runSimulation() {
       }
     }
 
-    // Inter-cell collisions
     const cellX = Number(key >> 32n);
     const cellY = Number(key & 0xffffffffn);
     
@@ -262,12 +253,10 @@ self.onmessage = (e: MessageEvent) => {
       canvasWidth = payload.width;
       canvasHeight = payload.height;
 
-      // Dynamically calculate particle count based on screen area for consistent density
       const particleDensity = 1 / 400; // 1 particle per 400 pixels^2
       const calculatedObjects = Math.floor(canvasWidth * canvasHeight * particleDensity);
       NUM_OBJECTS = Math.max(500, Math.min(calculatedObjects, 30000)); // Clamp between 500 and 8000
 
-      // Initialize buffer based on dynamic object count
       renderData = new Float32Array(NUM_OBJECTS * 7);
       dataBuffer = renderData.buffer as ArrayBuffer;
 
@@ -292,8 +281,7 @@ self.onmessage = (e: MessageEvent) => {
       attractionRadiusSq = isMouseDown ? 300 * 300 : 100 * 100;
       attractionRadius = isMouseDown ? 300 : 100;
       break;
-        case 'bufferBack':
-      // Use a type guard to ensure the payload is the correct type.
+        case 'bufferBack': 
       if (payload instanceof ArrayBuffer) {
         dataBuffer = payload;
         runSimulation();

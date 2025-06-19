@@ -84,9 +84,9 @@ export const homeContent: HomeContentItem[] = [
     heading: 'About',
     body: {
       type: 'paragraph',
-      text: 'I have a passion for working with people and building applications.',
-      text2: 'I have experience building full stack applications and mobile apps. Using',
-      text3: 'technologies like React, Next.js, Tailwind CSS, TypeScript, .Net, and more.'
+      text: 'I have a passion for working with people and building projects.',
+      text2: "I'm experienced in making full stack and mobile applications.",
+      text3: 'I use technologies like React, Next.js, TypeScript, .Net, and more.'
     },
   },
 
