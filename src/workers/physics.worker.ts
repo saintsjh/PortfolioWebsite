@@ -44,16 +44,16 @@ const CELL_SIZE = 12; // Increased for greater optimization, reducing grid manag
 let renderData: Float32Array;
 let dataBuffer: ArrayBuffer;
 
-// ANTI-TUNNELING
-function clampVelocity(vx: number, vy: number): [number, number] {
-  const velocitySq = vx * vx + vy * vy;
-  if (velocitySq > MAX_VELOCITY_SQ) {
-    const velocity = Math.sqrt(velocitySq);
-    const scale = MAX_VELOCITY / velocity;
-    return [vx * scale, vy * scale];
-  }
-  return [vx, vy];
-}
+// // ANTI-TUNNELING
+// function clampVelocity(vx: number, vy: number): [number, number] {
+//   const velocitySq = vx * vx + vy * vy;
+//   if (velocitySq > MAX_VELOCITY_SQ) {
+//     const velocity = Math.sqrt(velocitySq);
+//     const scale = MAX_VELOCITY / velocity;
+//     return [vx * scale, vy * scale];
+//   }
+//   return [vx, vy];
+// }
 
 function checkAndResolveCollision(objA: FlyingObject, objB: FlyingObject) {
     const dx = objB.x - objA.x;
