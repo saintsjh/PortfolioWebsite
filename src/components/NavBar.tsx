@@ -1,24 +1,42 @@
 import Link from "next/link";
 
-export default function NavBar() {
+interface NavBarProps {
+  currentPage?: string;
+}
+
+export default function NavBar({ currentPage }: NavBarProps) {
+  const navItems = [
+    { href: "/", label: "Home", key: "home" },
+    { href: "/projects", label: "Fun link", key: "projects" },
+    { href: "/contact", label: "Contact", key: "contact" },
+    { href: "/magnum-opus", label: "Magnum Opus", key: "magnum-opus" },
+    { href: "/more-about-me", label: "More About Me", key: "more-about-me" }
+  ];
+
   return (
     <header className="nav-header">
       <nav className="nav-links">
-        <Link href="/" className="nav-link">
-          Home
-        </Link>
-        <Link href="/projects" className="nav-link">
-          Fun link
-        </Link>
-        <Link href="/contact" className="nav-link">
-          Contact
-        </Link>
-        <Link href="/magnum-opus" className="nav-link">
-          Magnum Opus
-        </Link>
-        <Link href="/more-about-me" className="nav-link">
-          More About Me
-        </Link>
+        {navItems.map((item) => {
+          const isCurrentPage = currentPage === item.key;
+          
+          if (isCurrentPage) {
+            return (
+              <span 
+                key={item.key}
+                className="nav-link nav-link-current"
+                style={{ color: 'var(--ayu-orange)', cursor: 'default' }}
+              >
+                {item.label}
+              </span>
+            );
+          }
+          
+          return (
+            <Link href={item.href} className="nav-link" key={item.key}>
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
     </header>
   );

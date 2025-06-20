@@ -89,6 +89,19 @@ body {
   width: 100%;
 }
 
+.nav-link-current {
+  color: var(--ayu-orange) !important;
+  cursor: default !important;
+}
+
+.nav-link-current:hover {
+  color: var(--ayu-orange) !important;
+}
+
+.nav-link-current::after {
+  width: 0 !important;
+}
+
 .content {
   margin-left: auto;
   margin-right: auto;

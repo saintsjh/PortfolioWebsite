@@ -1,6 +1,5 @@
 'use client';
 
-import Link from "next/link";
 import Image from "next/image";
 import TypingEffect from "@/components/TypingEffect";
 import { homeContent, getRandomGreeting } from './home-content'; // Import the content data
@@ -59,7 +58,7 @@ export default function Home() {
 
   return (
     <main>
-      <NavBar />
+      <NavBar currentPage="home" />
 
       {/* --- DESKTOP LAYOUT --- */}
       <div className="main-content-container desktop-only">
@@ -120,7 +119,7 @@ export default function Home() {
                         onMouseLeave={!isMobile ? () => setHoveredIndex(null) : undefined}
                       >
                         <a href={item.href}
-                           className={projectName === 'Employee Expense Reporting Information System' ? 'project-link-wrap' : ''}
+                           className={projectName === ' Employee Expense Reporting Information System' ? 'project-link-wrap' : ''}
                            onClick={(e) => {
                             if (isMobile) {
                               if (hoveredIndex !== index) {
@@ -216,7 +215,7 @@ export default function Home() {
                         onClick={() => setHoveredIndex(hoveredIndex === index ? null : index)}
                       >
                         <a href={item.href}
-                           className={projectName === 'Employee Expense Reporting Information System' ? 'project-link-wrap' : ''}
+                           className={projectName === ' Employee Expense Reporting Information System' ? 'project-link-wrap' : ''}
                            onClick={(e) => {
                               if (hoveredIndex !== index) {
                                 e.preventDefault();

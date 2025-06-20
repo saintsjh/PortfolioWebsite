@@ -3,6 +3,7 @@
 import PhysicsCanvas from "@/components/PhysicsCanvas";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import NavBar from "@/components/NavBar";
 
 export default function Projects() {
   const glowRef = useRef<HTMLDivElement>(null);
@@ -151,13 +152,7 @@ export default function Projects() {
 
       <h1>FUN PAGE</h1>
       <p>Have some cheeky fun.</p>
-      <header className="nav-header">
-        <nav className="nav-links">
-          <Link className="nav-link" href="/">Back to HomePage</Link>
-          {/* <Link className="nav-link" href="/secret">Secret Page</Link> */}
-          <Link className="nav-link" href="/magnum-opus">Magnum Opus</Link>
-        </nav>
-      </header>
+      <NavBar currentPage="projects" />
     </div>
   );
 } 

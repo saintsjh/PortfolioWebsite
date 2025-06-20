@@ -1,6 +1,5 @@
 'use client';
 
-import Link from "next/link";
 import { moreAboutMeContent, SkillCategory, Job } from '@/app/more-about-me-content';
 import TypingEffect from "@/components/TypingEffect";
 import { useMediaQuery } from 'react-responsive';
@@ -21,7 +20,7 @@ export default function MoreAboutMe() {
 
   return (
     <main className="more-about-me">
-      <NavBar />
+      <NavBar currentPage="more-about-me" />
 
       <div className="main-content-container">
         <div className="text-content">
@@ -34,7 +33,7 @@ export default function MoreAboutMe() {
           </div>
 
           <div className={isMobile ? "sections-container-mobile" : "sections-container-desktop"}>
-            {moreAboutMeContent.map((section: any, index: number) => (
+            {moreAboutMeContent.map((section, index: number) => (
               <div className="content-section-column" key={`section-${index}`}>
                 <div className="section-heading" style={{ color: 'var(--ayu-orange)', opacity: 0.7 }}>
                   {section.heading}

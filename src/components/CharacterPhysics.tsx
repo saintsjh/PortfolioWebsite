@@ -196,7 +196,7 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
         setPhysicsState('settled');
       }, 50); // 50ms safeguard for layout stability
     });
-  }, [deconstructed, physicsState]);
+  }, [deconstructed, physicsState, isMobile]);
 
 
   // Set up event listeners for physics interaction
