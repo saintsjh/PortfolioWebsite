@@ -21,8 +21,6 @@ interface PhysicsObject {
   vy: number;
   homeX: number;
   homeY: number;
-  rotation: number;
-  angularVelocity: number;
   mass: number;
   radius: number;
   content: DeconstructedItem;
@@ -128,13 +126,20 @@ const deconstructContent = (content: HomeContentItem[], randomHello: string, isM
 const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
   const [objects, setObjects] = useState<PhysicsObject[]>([]);
   const [physicsState, setPhysicsState] = useState<'measuring' | 'settled' | 'active' | 'settling'>('measuring');
+  const [hasActivatedOnce, setHasActivatedOnce] = useState(false);
+  const [showInteractionHint, setShowInteractionHint] = useState(false);
   const layoutRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const mousePos = useRef({ x: 0, y: 0 });
   const animationFrameId = useRef<number | null>(null);
+  const physicsStateRef = useRef(physicsState);
   const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
   const [isMounted, setIsMounted] = useState(false);
   const [randomHello, setRandomHello] = useState('');
+
+  useEffect(() => {
+    physicsStateRef.current = physicsState;
+  }, [physicsState]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -142,7 +147,7 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
   }, []);
 
   // Extract the image from the content to be rendered separately.
-  const imageItem = (isMounted && isMobile) ? '/imgs/JH(2).png' : '/imgs/IMG_2635.jpeg';
+  const imageItem = (isMounted && isMobile) ? '/imgs/logo-gradient-jh.svg' : '/imgs/IMG_2635.jpeg';
 
   // Memoize the deconstructed content to avoid re-computation.
   // CRITICAL: Only deconstruct AFTER the random greeting is set on the client.
@@ -164,7 +169,7 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
         const measuredObjects: PhysicsObject[] = [];
         const elements = layoutRef.current.querySelectorAll('[data-id]');
         const mobileYOffset = isMobile ? 50 : 0; // Add 50px offset on mobile
-        const mobileXOffset = isMobile ? -45 : 0; // Add -20px offset on mobile
+        const mobileXOffset = isMobile ? 15 : 0; // Shift right for mobile padding
 
         elements.forEach(element => {
           const id = parseInt(element.getAttribute('data-id')!, 10);
@@ -181,8 +186,6 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
             vy: 0,
             homeX: homeX,
             homeY: homeY,
-            rotation: 0,
-            angularVelocity: 0,
             mass: 1,
             radius: 8,
             content: deconstructed[id],
@@ -196,33 +199,52 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
   }, [deconstructed, physicsState]);
 
 
-  // Phase 2: Run the animation loop.
+  // Set up event listeners for physics interaction
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
     const handleMouseMove = (event: MouseEvent) => {
       mousePos.current = { x: event.clientX, y: event.clientY };
     };
 
     const handleTouchMove = (event: TouchEvent) => {
-      if (event.touches.length > 0) {
-        event.preventDefault(); // Prevent scrolling
+      // Only prevent default if physics is active, to stop scrolling the page
+      if (physicsStateRef.current === 'active' && event.touches.length > 0) {
+        event.preventDefault();
         mousePos.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
       }
     };
 
     const handleTouchStart = (event: TouchEvent) => {
+      const targetElement = event.target as HTMLElement;
+      // Only prevent default if physics is active AND the user is not touching a button
+      if (physicsStateRef.current === 'active' && targetElement.tagName !== 'BUTTON') {
+        event.preventDefault();
+      }
       if (event.touches.length > 0) {
         mousePos.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
       }
     };
 
     window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('touchmove', handleTouchMove);
-    window.addEventListener('touchstart', handleTouchStart);
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchstart', handleTouchStart, { passive: false });
 
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchstart', handleTouchStart);
+    };
+  }, []); // Run only once
+
+  // Phase 2: Run the animation loop.
+  useEffect(() => {
     const animate = () => {
       if (physicsState === 'active') { // Only run simulation if active
         setObjects(prevObjects => {
-          const newObjects: PhysicsObject[] = JSON.parse(JSON.stringify(prevObjects));
+          // Use a much faster mapping for the new state array
+          const newObjects: PhysicsObject[] = prevObjects.map(o => ({ ...o }));
           
           const subSteps = 5; // --- SUB-STEPPING to prevent tunneling ---
           const dt = 1 / subSteps;
@@ -303,21 +325,14 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
               if (obj.y < boundaryPadding) { obj.y = boundaryPadding; obj.vy *= -0.5; }
               if (obj.y > window.innerHeight - boundaryPadding) { obj.y = window.innerHeight - boundaryPadding; obj.vy *= -0.5; }
 
-              // Update Rotation
-              const targetAngle = Math.atan2(obj.vy, obj.vx) * (180 / Math.PI) + 90;
-              let angleDifference = targetAngle - obj.rotation;
-              while (angleDifference < -180) angleDifference += 360;
-              while (angleDifference > 180) angleDifference -= 360;
-              const torque = angleDifference * 0.1;
-              obj.angularVelocity = (obj.angularVelocity + torque) * 0.92;
-              obj.rotation += obj.angularVelocity * dt;
+              // --- ROTATION REMOVED FOR PERFORMANCE ---
             }
           }
           return newObjects;
         });
       } else if (physicsState === 'settling') {
         setObjects(prevObjects => {
-          const newObjects: PhysicsObject[] = JSON.parse(JSON.stringify(prevObjects));
+          const newObjects: PhysicsObject[] = prevObjects.map(o => ({ ...o }));
           let allSettled = true;
 
           for (const obj of newObjects) {
@@ -331,14 +346,6 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
             obj.x += obj.vx;
             obj.y += obj.vy;
 
-            // Settle rotation
-            let angleDifference = 0 - obj.rotation;
-            while (angleDifference < -180) angleDifference += 360;
-            while (angleDifference > 180) angleDifference -= 360;
-            const torque = angleDifference * 0.2;
-            obj.angularVelocity = (obj.angularVelocity + torque) * 0.8;
-            obj.rotation += obj.angularVelocity;
-
             const dist = Math.sqrt(Math.pow(obj.x - obj.homeX, 2) + Math.pow(obj.y - obj.homeY, 2));
             const speed = Math.sqrt(obj.vx * obj.vx + obj.vy * obj.vy);
 
@@ -351,7 +358,7 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
             setTimeout(() => {
               setObjects(prev => prev.map(o => ({
                 ...o,
-                x: o.homeX, y: o.homeY, vx: 0, vy: 0, rotation: 0, angularVelocity: 0,
+                x: o.homeX, y: o.homeY, vx: 0, vy: 0,
               })));
               setPhysicsState('settled');
             }, 0);
@@ -365,15 +372,17 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
 
     animationFrameId.current = requestAnimationFrame(animate);
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchstart', handleTouchStart);
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
   }, [physicsState]); // Rerun effect if state changes
 
 
   const activatePhysics = () => {
+    if (isMobile && !hasActivatedOnce) {
+      setShowInteractionHint(true);
+      setTimeout(() => setShowInteractionHint(false), 4000); // Hide after 4 seconds
+      setHasActivatedOnce(true);
+    }
     setPhysicsState('active');
   };
 
@@ -384,6 +393,29 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
   // The final render
   return (
     <div ref={containerRef} style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+      {/* Mobile interaction hint */}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '80px', // Position above the nav bar
+          left: '50%',
+          transform: 'translateX(-50%)',
+          padding: '10px 15px',
+          background: 'rgba(0, 0, 0, 0.6)',
+          color: 'white',
+          borderRadius: '8px',
+          zIndex: 10,
+          fontFamily: 'monospace',
+          textAlign: 'center',
+          pointerEvents: 'none',
+          opacity: showInteractionHint ? 1 : 0,
+          transition: 'opacity 0.5s ease-in-out',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        Touch and drag to interact!
+      </div>
+      
       {/* The main layout container, used ONLY to position the static image */}
       <div className="main-content-container" style={{ pointerEvents: 'none' }}>
         {/* This div is empty but necessary for the flexbox layout to push the image to the right */}
@@ -459,7 +491,7 @@ const RenderedObject: React.FC<{ object: PhysicsObject }> = ({ object }) => {
     position: 'absolute' as const,
     left: 0,
     top: 0,
-    transform: `translate(${object.x}px, ${object.y}px) rotate(${object.rotation}deg)`,
+    transform: `translate(${object.x}px, ${object.y}px)`,
     color: 'var(--ayu-fg)',
     minWidth: 'auto',
     display: 'inline-block',

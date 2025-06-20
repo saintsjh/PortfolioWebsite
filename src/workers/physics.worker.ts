@@ -12,6 +12,8 @@ interface FlyingObject {
   g: number;
   b: number;
   a: number;
+  baseRadius: number;
+  pulsePhase: number;
 }
 
 // These variables will hold the state of our simulation inside the worker.
@@ -25,6 +27,8 @@ let NUM_OBJECTS = 0; // Will now be set dynamically on 'init'
 
 let attractionRadiusSq = 200 * 200;
 let attractionRadius = 200; // Keep the actual radius for intensity calculations
+let attractionForce = 0.3;
+let baseR = 255, baseG = 210, baseB = 128;
 
 // ANTI-TUNNELING
 const MAX_VELOCITY = 8; // Adjust this value to control maximum speed
@@ -104,15 +108,29 @@ function runSimulation() {
     const dx = mousePos.x - obj.x;
     const dy = mousePos.y - obj.y;
     const distanceSq = dx * dx + dy * dy;
+    const distance = Math.sqrt(distanceSq);
 
     let newVx = obj.vx;
     let newVy = obj.vy;
 
-    // Default falling color
-    obj.r = 255;
-    obj.g = 210;
-    obj.b = 128;
-    obj.a = 0.7;
+    // Calculate velocity magnitude for color effects
+    const velocity = Math.sqrt(obj.vx * obj.vx + obj.vy * obj.vy);
+    const normalizedVelocity = Math.min(velocity / MAX_VELOCITY, 1);
+
+    // Dynamic size based on distance from mouse
+    const maxDistanceForSizing = 150;
+    const distanceEffect = Math.max(0, 1 - (distance / maxDistanceForSizing));
+    obj.radius = obj.baseRadius + (distanceEffect * 0.5);
+
+    // Pulsing effect for attracted particles
+    obj.pulsePhase += 0.15;
+    const pulseEffect = Math.sin(obj.pulsePhase) * 0.1 + 1;
+
+    // Default falling color with velocity-based variation
+    obj.r = Math.floor(baseR - normalizedVelocity * 50);
+    obj.g = Math.floor(baseG - normalizedVelocity * 30);
+    obj.b = Math.floor(baseB + normalizedVelocity * 50);
+    obj.a = 0.7 + normalizedVelocity * 0.2;
 
     const repulsionRadiusSq = isMouseDown ? 30 * 30 : 0; // 30px shield when mouse is down
 
@@ -132,19 +150,20 @@ function runSimulation() {
       obj.a = 1.0;
     } else if (distanceSq < attractionRadiusSq) {
       if (distanceSq > 1) { // Prevent division by zero
-        const distance = Math.sqrt(distanceSq);
         const normalizedDx = dx / distance;
         const normalizedDy = dy / distance;
 
-        const attractionForce = 0.3;
         newVx += normalizedDx * attractionForce;
         newVy += normalizedDy * attractionForce;
 
         const intensity = 1 - (distance / attractionRadius);
-        obj.r = 255;
-        obj.g = Math.floor(128 + (210 - 128) * intensity);
-        obj.b = Math.floor(255 - (255 - 128) * intensity);
-        obj.a = 0.9;
+        // Enhanced pulsing effect for attracted particles
+        obj.radius = obj.baseRadius * pulseEffect + (distanceEffect * 0.5);
+        
+        obj.r = Math.floor(baseR - normalizedVelocity * 30);
+        obj.g = Math.floor(baseG * intensity + normalizedVelocity * 40);
+        obj.b = Math.floor(baseB + (255 - baseB) * intensity + normalizedVelocity * 60);
+        obj.a = 0.9 + normalizedVelocity * 0.1;
       }
     } else {
       const gravity = 0.2;
@@ -242,7 +261,11 @@ function runSimulation() {
   }
 
   populateRenderBuffer(objects, renderDataView);
-  self.postMessage(dataBuffer, [dataBuffer]);
+  
+  self.postMessage({ 
+    type: 'render', 
+    particles: dataBuffer, 
+  }, [dataBuffer]);
 }
 
 self.onmessage = (e: MessageEvent) => {
@@ -255,23 +278,25 @@ self.onmessage = (e: MessageEvent) => {
 
       const particleDensity = 1 / 400; // 1 particle per 400 pixels^2
       const calculatedObjects = Math.floor(canvasWidth * canvasHeight * particleDensity);
-      NUM_OBJECTS = Math.max(500, Math.min(calculatedObjects, 30000)); // Clamp between 500 and 8000
+      NUM_OBJECTS = Math.max(500, Math.min(calculatedObjects, 4000)); // Reduced max for performance
 
       renderData = new Float32Array(NUM_OBJECTS * 7);
       dataBuffer = renderData.buffer as ArrayBuffer;
-
+      
       objects = Array.from({ length: NUM_OBJECTS }, (_, i) => ({
         id: i,
         x: Math.random() * canvasWidth,
         y: Math.random() * canvasHeight,
         vx: (Math.random() - 0.5) * 2,
         vy: (Math.random() - 0.5) * 2,
-        radius: .75, 
+        radius: 1.2, 
         mass: 1,
         r: 255,
         g: 210,
         b: 128,
         a: 0.7,
+        baseRadius: 1.2,
+        pulsePhase: Math.random() * Math.PI * 2,
       }));
       runSimulation();
       break;
@@ -282,14 +307,20 @@ self.onmessage = (e: MessageEvent) => {
       attractionRadius = isMouseDown ? 300 : 100;
       break;
         case 'bufferBack': 
-      if (payload instanceof ArrayBuffer) {
-        dataBuffer = payload;
-        runSimulation();
-      }
+      dataBuffer = payload.particles;
+      runSimulation();
       break;
     case 'resize':
         canvasWidth = payload.width;
         canvasHeight = payload.height;
+        break;
+    case 'updateSettings':
+        attractionForce = payload.pullStrength;
+        // Convert hex color to RGB
+        const hex = payload.baseColor.replace('#', '');
+        baseR = parseInt(hex.substring(0, 2), 16);
+        baseG = parseInt(hex.substring(2, 4), 16);
+        baseB = parseInt(hex.substring(4, 6), 16);
         break;
   }
 }; 

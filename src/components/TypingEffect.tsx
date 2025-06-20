@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, ReactNode } from 'react';
+import { useState, useEffect, useRef, ReactNode, memo } from 'react';
 
 interface TypingEffectProps {
   text: string;
@@ -8,6 +8,7 @@ interface TypingEffectProps {
   className?: string;
   glitchClassName?: string; // CSS class for the glitching characters
   showBlinkingCursor?: boolean;
+  onFinished?: () => void;
 }
 
 const TypingEffect: React.FC<TypingEffectProps> = ({ 
@@ -15,7 +16,8 @@ const TypingEffect: React.FC<TypingEffectProps> = ({
   speed = 25, 
   className, 
   glitchClassName = 'text-ayu-green', // Default bright color for glitching
-  showBlinkingCursor = false 
+  showBlinkingCursor = false,
+  onFinished
 }) => {
   // State now holds an array of React nodes (styled spans)
   const [displayedNodes, setDisplayedNodes] = useState<ReactNode[]>([]);
@@ -95,6 +97,9 @@ const TypingEffect: React.FC<TypingEffectProps> = ({
             setShowCursor(prev => !prev);
           }, 500);
         }
+        if (onFinished) {
+          onFinished();
+        }
       }
     };
 
@@ -105,7 +110,7 @@ const TypingEffect: React.FC<TypingEffectProps> = ({
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
 
-  }, [text, speed, showBlinkingCursor, glitchClassName]);
+  }, [text, speed, showBlinkingCursor, glitchClassName, onFinished]);
 
   return (
     <span className={className}>
@@ -115,4 +120,4 @@ const TypingEffect: React.FC<TypingEffectProps> = ({
   );
 };
 
-export default TypingEffect; 
+export default memo(TypingEffect); 

@@ -50,6 +50,7 @@ body {
   align-items: center;
   padding: 1rem 2rem;
   background-color: var(--ayu-bg);
+  z-index: 100;
 }
 
 .nav-links {
@@ -184,11 +185,15 @@ li.list-item {
 }
 
 .main-content-container {
-  margin-right: 100px;
+  margin-right: 50px;
   margin-top: 60px;
   display: flex;
   flex-direction: row;
-  gap: 1rem;
+  gap: 2rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-height: 100vh; /* Ensure container has minimum height */
+  position: relative;
 }
 
 @media (max-width: 768px){
@@ -201,52 +206,59 @@ li.list-item {
 }}
 
 .text-content {
-  flex: 2.5;
+  flex: 1; /* Allow to grow and fill available space */
+  max-width: 55%; /* Reduced to give more space for image */
   padding-left: 65px;
+  min-width: 0; /* Allow flex item to shrink below its content size */
 }
 
 @media (max-width: 768px){
   .text-content {
     flex: 1.0;
+    max-width: 100%;
     padding-left: 0px;
   }
   
 }
 
 .image-content {
-  flex: 1.5;
+  position: fixed;
+  top: 100px;
+  right: 50px; /* Padding from right edge */
+  width: clamp(250px, calc(100vw - 65px - 55% - 4rem - 100px), 450px); /* Shrinks to avoid text overlap */
+  height: clamp(312px, calc((100vw - 65px - 55% - 4rem - 100px) * 1.25), 562px); /* Maintains aspect ratio */
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   background-color: var(--ayu-orange); 
-  padding: 10px; /* Creates space around the image */
-  border-radius: 57px; /* Slightly larger than the image's border-radius */
+  padding: 8px;
+  border-radius: 24px;
+  z-index: 10;
 }
-/*
+
 @media (max-width: 768px){
   .image-content {
+    position: static; /* Reset to normal flow on mobile */
     justify-content: center;
     flex: 1;
+    width: auto;
+    height: auto;
     padding: 0;
     background-color: transparent;
     border-radius: 10px;
   }
 }
-@media (max-width:768px){
-  .profile-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 18px;
-    border: 2px solid var(--ayu-fg);
-    transition: all 0.3s ease-in-out;
-  }
-  
-  .profile-image:hover {
-    box-shadow: 0 0 0px 0px var(--ayu-cyan);
+
+.image-content:hover {
+  background-color: color-mix(in srgb, var(--ayu-orange) 85%, #000);
+}
+
+@media (max-width: 768px) {
+  .image-content:hover {
+    background-color: transparent;
   }
 }
-*/
+
 .profile-image {
   width: 100%;
   height: 100%;
@@ -339,31 +351,36 @@ li.list-item {
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
   .main-content-container {
-    flex-direction: row; /* Keep horizontal layout */
-    margin-right: 10px;
-    margin-top: 20px;
-    margin-left: 10px;
-    gap: 1rem; /* Smaller gap */
-    font-size: 0.75rem; /* Scale down overall text */
+    margin-left: 15px;
+    margin-right: 15px;
+    margin-top: 40px;
+    flex-direction: column;
   }
 
   .text-content {
-    flex: 3; /* Keep the same proportions */
+    width: 100%;
+    padding-left: 0px;
+    order: 2;
+    margin-top: 2rem;
+  }
+  
+  .about-me-text {
+    white-space: normal;
   }
 
   .image-content {
-    /* Consolidated and updated styles for the mobile image container */
-    flex: none; /* Prevent the container from growing */
-    width: fit-content; /* Shrink-wrap the container to its content */
-    height: fit-content; /* Allow height to be determined by content */
-    padding: 3px 4.5px; /* Use different vertical (2px) and horizontal (4px) padding to create even spacing */
-    background-color: var(--ayu-orange); /* Set the requested background */
-    border-radius: 26px; /* Image radius (24px) + vertical padding (2px) */
-    align-self: flex-start; /* Move to top of flex container */
+    padding: 0;
+    background-color: transparent;
+    order: 1;
+    align-self: flex-end;
+  }
+
+  .image-content:hover {
+    background-color: transparent;
   }
 
   .profile-image {
-    /* Consolidated and updated styles for the mobile image */
+    justify-content: right;
     width: 90px;
     height: 87px;
     object-fit: cover;
@@ -372,29 +389,29 @@ li.list-item {
   }
   
   .profile-image:hover {
-    box-shadow: none; /* Remove hover shadow on mobile */
+    box-shadow: none;
   }
 
   .main-heading {
-    font-size: 0.9rem; /* Much smaller heading */
+    font-size: 0.9rem;
     line-height: 1.2;
     margin-top: 8px;
   }
 
   .content-section {
-    gap: 0.75rem; /* Smaller gap */
-    margin-top: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 
   .section-heading {
-    flex: 0 0 60px; /* Smaller heading width */
-    font-size: 0.65rem;
-    font-weight: 700;
+    text-align: left;
+    flex-basis: auto;
   }
 
   .section-body {
     flex: 1;
-    font-size: 0.7rem; /* Smaller body text */
+    font-size: 0.7rem;
     line-height: 1.3;
   }
 
@@ -434,7 +451,6 @@ li.list-item {
     border-width: 2px;
   }
 
-  /* Smaller list items but still touch-friendly */
   .list-item {
     margin-top: 0;
     line-height: 1.2;
@@ -447,7 +463,6 @@ li.list-item {
     display: block;
   }
 
-  /* Scale down physics characters */
   .physics-character {
     font-size: 0.6rem;
   }
@@ -459,12 +474,35 @@ li.list-item {
   .physics-character.list-item {
     font-size: 0.6rem;
   }
+
+  .project-link-wrap {
+    display: inline;
+  }
 }
 
 /* Alternative approach: Use a span wrapper for numbers */
 .project-number {
   color: var(--ayu-orange);
-  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.description-wrapper {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease-in-out;
+}
+
+.description-wrapper.open {
+  max-height: 100px; /* Adjust as needed */
+}
+
+.project-description {
+  font-size: 0.9rem;
+  color: var(--ayu-comment);
+  margin-top: 0.5rem;
+  margin-left: 2.75rem; /* Align with project title */
+  font-style: italic;
+  padding-bottom: 0.5rem; /* Add some space at the bottom */
 }
 
 /* Override for the physics blueprint to allow text wrapping during measurement */
@@ -474,6 +512,10 @@ li.list-item {
 
 .physics-blueprint .section-body p {
   display: block;
+}
+
+.physics-blueprint .main-heading {
+  white-space: pre-wrap;
 }
 
 .typing-wrapper {
@@ -493,4 +535,250 @@ li.list-item {
   margin: 0;
   overflow-wrap: break-word;
   word-break: break-all;
+}
+
+.about-me-text {
+  white-space: nowrap;
+}
+
+.about-me-text-wrap {
+  white-space: normal;
+}
+
+.project-link-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: normal;
+}
+
+.physics-blueprint .main-heading {
+  white-space: pre-wrap;
+}
+
+.desktop-only {
+  display: block;
+}
+
+.mobile-layout {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-layout {
+    display: block;
+    padding: 0 15px; /* Add horizontal padding */
+  }
+
+  .mobile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    gap: 1rem;
+  }
+  
+  .mobile-header .main-heading {
+    font-size: 1.3rem;
+    line-height: 1.4;
+    flex-grow: 1;
+  }
+  
+  .mobile-header .profile-image {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+  }
+
+  /* --- Cleanup old mobile styles --- */
+  .main-content-container {
+    /* These are now controlled by the new layout containers */
+    margin-left: initial;
+    margin-right: initial;
+    margin-top: initial;
+    flex-direction: row; /* Revert to default */
+    align-items: flex-start; /* Revert to default */
+  }
+
+  .main-content-container .text-content {
+    width: 100%;
+    padding-left: 2rem;
+    order: initial;
+    margin-top: initial;
+  }
+  
+  .main-content-container .image-content {
+    order: initial;
+    align-self: initial;
+  }
+  
+  .mobile-layout .text-content {
+    padding-left: 0;
+    margin-top: 4rem; /* Space between header and content */
+  }
+}
+
+.mobile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 40px;
+  gap: 1rem;
+}
+
+.mobile-header-left {
+  flex: 1; /* Allow this to grow and push the icon to the right */
+}
+  
+.mobile-header .main-heading {
+  font-size: 1.3rem;
+  line-height: 1.4;
+  flex-grow: 1;
+}
+
+.mobile-header .profile-image {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+/* More About Me Page Styles */
+.sections-container-desktop {
+  display: flex;
+  flex-direction: row-reverse; /* Reverse the order so Skills (first in array) appears on left */
+  gap: 4rem;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.sections-container-mobile {
+  display: flex;
+  flex-direction: column-reverse; /* Reverse order on mobile so Experience appears first */
+  gap: 2rem;
+}
+
+.content-section-column {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.content-section-column .section-heading {
+  flex: 0 0 100px;
+  text-align: right;
+  font-weight: 700;
+  color: var(--ayu-comment);
+  margin-top: 0; /* Ensure no extra margin */
+  padding-top: 0; /* Ensure no extra padding */
+}
+
+.content-section-column .section-body {
+  flex: 1;
+  margin-top: 0; /* Remove any top margin */
+  padding-top: 0; /* Remove any top padding */
+}
+
+/* Override text-content max-width for More About Me page */
+.more-about-me .text-content {
+  max-width: 100% !important;
+  padding-left: 65px;
+  padding-right: 65px;
+  padding-bottom: 6rem; /* Add bottom padding to prevent nav bar overlap */
+}
+
+@media (max-width: 768px) {
+  .more-about-me .text-content {
+    max-width: 100% !important;
+    padding-left: 0px;
+    padding-right: 0px;
+    padding-bottom: 6rem; /* Add bottom padding for mobile too */
+  }
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.skill-category {
+  /* background: color-mix(in srgb, var(--ayu-bg) 80%, #fff); */
+  padding: 0.75rem;
+  border-radius: 8px;
+}
+
+.skill-category-title {
+  color: var(--ayu-yellow);
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+
+.skills-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.skills-list li {
+  background-color: var(--ayu-comment);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
+.experience-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.experience-item {
+  /* No special styling needed for the container yet */
+}
+
+.experience-header {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+
+.experience-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--ayu-green);
+}
+
+.experience-company {
+    margin-left: 0.5rem;
+    color: var(--ayu-cyan);
+}
+
+.experience-date {
+  color: var(--ayu-comment);
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.experience-description {
+  list-style-position: outside;
+  padding-left: 1.2rem; /* Indent the list */
+}
+
+.experience-description li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+@media (min-width: 769px) {
+  .text-content {
+    padding-bottom: 5rem; /* Move padding here instead of main element */
+  }
 }

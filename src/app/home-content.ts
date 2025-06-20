@@ -14,9 +14,10 @@ interface ParagraphBody {
 
 interface ListItemContent {
   type: 'listItem';
-  heading: string; // "Projs." for all of them
+  heading?: string;
   text: string;
   href: string;
+  description: string;
 }
 
 interface SectionContent {
@@ -84,17 +85,41 @@ export const homeContent: HomeContentItem[] = [
     heading: 'About',
     body: {
       type: 'paragraph',
-      text: 'I have a passion for working with people and building projects.',
-      text2: "I'm experienced in making full stack and mobile applications.",
-      text3: 'I use technologies like React, Next.js, TypeScript, .Net, and more.'
+      text: "I have a passion for working with people making projects.",
+      text2: "I'm experienced with building full stack and mobile apps.",
+      text3: "  Using tech like React, Next.js, TypeScript, .Net.",
     },
   },
-
-  { type: 'listItem', heading: 'Projs.', text: '00. AWS CloudSharing Project', href: 'https://github.com/saintsjh/AwsCloudSharing' },
-  { type: 'listItem', heading: 'Projs.', text: '01. PyFaceID Project', href: 'https://github.com/saintsjh/PyFaceID' },
-  { type: 'listItem', heading: 'Projs.', text: '02. Employee Expense Reporting Information System', href: '' },
-  { type: 'listItem', heading: 'Projs.', text: '03. Elden Counter', href: 'https://github.com/saintsjh/EldenCounter' },
-  { type: 'listItem', heading: 'Projs.', text: '04. Arduino Robot', href: 'https://github.com/saintsjh/ArduinoRobot' },
+  {
+    type: 'listItem',
+    text: '00. AWS CloudSharing Project',
+    href: 'https://github.com/saintsjh/AwsCloudSharing',
+    description: 'A serverless file sharing application built with TypeScript, utilizing AWS Lambda, S3, and other cloud services for a scalable and cost-effective solution.',
+  },
+  {
+    type: 'listItem',
+    text: '01. PyFaceID Project',
+    href: 'https://github.com/saintsjh/PyFaceID',
+    description: 'A facial recognition system implemented in Python, capable of identifying and verifying individuals from image or video sources.',
+  },
+  {
+    type: 'listItem',
+    text: '02. Employee Expense Reporting Information System',
+    href: '',
+    description: 'A full-stack information system designed to streamline and manage employee expense reports, built with a focus on usability and data integrity.',
+  },
+  {
+    type: 'listItem',
+    text: '03. Elden Counter',
+    href: 'https://github.com/saintsjh/EldenCounter',
+    description: 'A tool for tracking deaths in the game Elden Ring.',
+  },
+  {
+    type: 'listItem',
+    text: '04. Arduino Robot',
+    href: 'https://github.com/saintsjh/ArduinoRobot',
+    description: 'An open-source, 3D-printed robotic arm powered by an Arduino, designed to be a low-cost, effective learning tool for robotics and automation.',
+  },
   {
     type: 'image',
     src: '/imgs/IMG_2635.jpeg',
