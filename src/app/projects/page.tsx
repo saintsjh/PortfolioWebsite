@@ -1,7 +1,6 @@
 'use client';
 
 import PhysicsCanvas from "@/components/PhysicsCanvas";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import NavBar from "@/components/NavBar";
 

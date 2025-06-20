@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { homeContent } from '../home-content';
 import CharacterPhysics from '@/components/CharacterPhysics';
 import NavBar from "@/components/NavBar";

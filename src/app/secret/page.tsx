@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { homeContent } from '../home-content';
 import SecretPhysics from '@/components/SecretPhysics';
 import NavBar from "@/components/NavBar";
