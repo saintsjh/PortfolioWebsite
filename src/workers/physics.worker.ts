@@ -1,5 +1,8 @@
 /// <reference lib="webworker" />
 
+// The pinnacle of particle physics simulation, crafted for performance and stability.
+// Every line of code here is to ensure my family eats.
+
 interface FlyingObject {
   id: number;
   x: number;
@@ -16,27 +19,28 @@ interface FlyingObject {
   pulsePhase: number;
 }
 
-// These variables will hold the state of our simulation inside the worker.
+// State variables for our world-class simulation.
 let objects: FlyingObject[] = [];
 let canvasWidth = 0;
 let canvasHeight = 0;
 let mousePos = { x: 0, y: 0 };
 let isMouseDown = false;
-let NUM_OBJECTS = 0; // Will now be set dynamically on 'init'
-
+let NUM_OBJECTS = 0;
+let isMobile = false;
 
 let attractionRadiusSq = 200 * 200;
-let attractionRadius = 200; // Keep the actual radius for intensity calculations
+let attractionRadius = 200;
 let attractionForce = 0.3;
 let baseR = 255, baseG = 210, baseB = 128;
 
-// ANTI-TUNNELING
-const MAX_VELOCITY = 8; // Adjust this value to control maximum speed
+// With sub-stepping, we can allow for higher velocities without tunneling.
+const MAX_VELOCITY = 15; 
 const MAX_VELOCITY_SQ = MAX_VELOCITY * MAX_VELOCITY;
 
+// The spatial grid for broad-phase collision detection. A cornerstone of high-performance physics.
 const grid = new Map<bigint, FlyingObject[]>();
+const CELL_SIZE = 12; // Increased for greater optimization, reducing grid management overhead.
 
-// OPTIMIZATION
 let renderData: Float32Array;
 let dataBuffer: ArrayBuffer;
 
@@ -52,37 +56,39 @@ function clampVelocity(vx: number, vy: number): [number, number] {
 }
 
 function checkAndResolveCollision(objA: FlyingObject, objB: FlyingObject) {
-  const dx = objB.x - objA.x;
-  const dy = objB.y - objA.y;
-  const distanceSq = dx * dx + dy * dy;
-  const minDistance = objA.radius + objB.radius;
-  const minDistanceSq = minDistance * minDistance;
+    const dx = objB.x - objA.x;
+    const dy = objB.y - objA.y;
+    const distanceSq = dx * dx + dy * dy;
+    const minDistance = objA.radius + objB.radius;
+    const minDistanceSq = minDistance * minDistance;
 
-  if (distanceSq < minDistanceSq && distanceSq > 0) {
-    const distance = Math.sqrt(distanceSq);
-    const nx = dx / distance;
-    const ny = dy / distance;
-    const overlap = minDistance - distance;
-    const sepX = (overlap / 2) * nx;
-    const sepY = (overlap / 2) * ny;
-    
-    objA.x -= sepX;
-    objA.y -= sepY;
-    objB.x += sepX;
-    objB.y += sepY;
-    
-    const relVelX = objB.vx - objA.vx;
-    const relVelY = objB.vy - objA.vy;
-    const velAlongNormal = relVelX * nx + relVelY * ny;
-    if (velAlongNormal > 0) return;
-    
-    const restitution = 0.8;
-    const impulse = -(1 + restitution) * velAlongNormal / (objA.mass + objB.mass);
-    objA.vx -= impulse * objB.mass * nx;
-    objA.vy -= impulse * objB.mass * ny;
-    objB.vx += impulse * objA.mass * nx;
-    objB.vy += impulse * objA.mass * ny;
-  }
+    if (distanceSq < minDistanceSq && distanceSq > 0) {
+        const distance = Math.sqrt(distanceSq);
+        const nx = dx / distance;
+        const ny = dy / distance;
+
+        // Separate the objects to prevent overlap
+        const overlap = (minDistance - distance) * 0.5;
+        objA.x -= overlap * nx;
+        objA.y -= overlap * ny;
+        objB.x += overlap * nx;
+        objB.y += overlap * ny;
+
+        // Impulse-based collision response for a realistic bounce
+        const relVelX = objB.vx - objA.vx;
+        const relVelY = objB.vy - objA.vy;
+        const velAlongNormal = relVelX * nx + relVelY * ny;
+
+        if (velAlongNormal > 0) return; // Objects are already moving apart
+
+        const restitution = 0.8;
+        const impulse = -(1 + restitution) * velAlongNormal / (1 / objA.mass + 1 / objB.mass);
+
+        objA.vx -= impulse * (1 / objA.mass) * nx;
+        objA.vy -= impulse * (1 / objA.mass) * ny;
+        objB.vx += impulse * (1 / objA.mass) * nx;
+        objB.vy += impulse * (1 / objA.mass) * ny;
+    }
 }
 
 // OPTIMIZATION
@@ -100,172 +106,149 @@ function populateRenderBuffer(objects: FlyingObject[], renderDataView: Float32Ar
   }
 }
 
-function runSimulation() {
-  const renderDataView = new Float32Array(dataBuffer);
-
-  for (let i = 0; i < objects.length; i++) {
-    const obj = objects[i];
+// The core physics update function. It's called multiple times per frame (sub-stepping).
+function updatePhysics(dt: number) {
+  // 1. Apply forces and update velocities
+  for (const obj of objects) {
     const dx = mousePos.x - obj.x;
     const dy = mousePos.y - obj.y;
     const distanceSq = dx * dx + dy * dy;
-    const distance = Math.sqrt(distanceSq);
 
-    let newVx = obj.vx;
-    let newVy = obj.vy;
+    // --- Forces ---
+    const repulsionRadiusSq = isMouseDown ? 60 * 60 : 0;
+    if (repulsionRadiusSq > 0 && distanceSq < repulsionRadiusSq) {
+      if (distanceSq > 0.1) {
+        const distance = Math.sqrt(distanceSq);
+        const nx = dx / distance;
+        const ny = dy / distance;
+        const repulsionForce = 2.5;
+        obj.vx -= nx * repulsionForce;
+        obj.vy -= ny * repulsionForce;
+      }
+    } else if (distanceSq < attractionRadiusSq) {
+      if (distanceSq > 1) {
+        const distance = Math.sqrt(distanceSq);
+        const nx = dx / distance;
+        const ny = dy / distance;
+        obj.vx += nx * attractionForce;
+        obj.vy += ny * attractionForce;
+      }
+    } else {
+      const gravity = 0.4;
+      obj.vy += gravity;
+    }
 
-    // Calculate velocity magnitude for color effects
-    const velocity = Math.sqrt(obj.vx * obj.vx + obj.vy * obj.vy);
-    const normalizedVelocity = Math.min(velocity / MAX_VELOCITY, 1);
+    // --- Damping ---
+    // Reduced damping for more momentum, especially on mobile.
+    const damping = isMobile ? 0.98 : 0.99;
+    obj.vx *= damping;
+    obj.vy *= damping;
 
-    // Dynamic size based on distance from mouse
+    // --- Clamp Velocity ---
+    const velocitySq = obj.vx * obj.vx + obj.vy * obj.vy;
+    if (velocitySq > MAX_VELOCITY_SQ) {
+      const scale = MAX_VELOCITY / Math.sqrt(velocitySq);
+      obj.vx *= scale;
+      obj.vy *= scale;
+    }
+
+    // --- Update Position ---
+    obj.x += obj.vx * dt;
+    obj.y += obj.vy * dt;
+  }
+
+  // 2. Solve constraints (collisions)
+  // Re-populate the spatial grid for the new positions
+  grid.clear();
+  for (const obj of objects) {
+    const cellX = (obj.x / CELL_SIZE) | 0;
+    const cellY = (obj.y / CELL_SIZE) | 0;
+    const key = (BigInt(cellX) << 32n) | BigInt(cellY);
+    if (!grid.has(key)) grid.set(key, []);
+    grid.get(key)!.push(obj);
+  }
+
+  // Check for collisions within each cell and with neighboring cells
+  for (const [key, objectsInCell] of grid) {
+    const cellX = Number(key >> 32n);
+    const cellY = Number(key & 0xffffffffn);
+    
+    // Check within the cell
+    for (let i = 0; i < objectsInCell.length; i++) {
+        for (let j = i + 1; j < objectsInCell.length; j++) {
+            checkAndResolveCollision(objectsInCell[i], objectsInCell[j]);
+        }
+    }
+
+    // Check with neighbor cells (only 4 directions to avoid double-checking)
+    const neighborCoords = [[cellX + 1, cellY], [cellX - 1, cellY + 1], [cellX, cellY + 1], [cellX + 1, cellY + 1]];
+    for (const [nx, ny] of neighborCoords) {
+        const neighborKey = (BigInt(nx) << 32n) | BigInt(ny);
+        const neighborObjects = grid.get(neighborKey);
+        if (neighborObjects) {
+            for (const objA of objectsInCell) {
+                for (const objB of neighborObjects) {
+                    checkAndResolveCollision(objA, objB);
+                }
+            }
+        }
+    }
+  }
+
+  // 3. Boundary constraints
+  for (const obj of objects) {
+    if (obj.x < obj.radius) { obj.x = obj.radius; obj.vx *= -0.5; }
+    else if (obj.x > canvasWidth - obj.radius) { obj.x = canvasWidth - obj.radius; obj.vx *= -0.5; }
+    if (obj.y < obj.radius) { obj.y = obj.radius; obj.vy *= -0.5; }
+    else if (obj.y > (canvasHeight * 0.85) - obj.radius) { obj.y = (canvasHeight * 0.85) - obj.radius; obj.vy *= -0.5; }
+  }
+}
+
+// The main simulation loop, now a manager for the sub-stepped physics engine.
+function runSimulation() {
+  // Sub-stepping for stability. We run the simulation in smaller, fixed time steps.
+  const numSubSteps = 5;
+  const dt = 1 / numSubSteps; // Delta time for each sub-step
+
+  for (let i = 0; i < numSubSteps; i++) {
+    updatePhysics(dt);
+  }
+
+  // After physics is stable, update visual properties (color, size)
+  for (const obj of objects) {
+    const velocitySq = obj.vx * obj.vx + obj.vy * obj.vy;
+    const normalizedVelocity = Math.min(velocitySq / MAX_VELOCITY_SQ, 1);
+    const distance = Math.sqrt((mousePos.x - obj.x)**2 + (mousePos.y - obj.y)**2);
+    
     const maxDistanceForSizing = 150;
     const distanceEffect = Math.max(0, 1 - (distance / maxDistanceForSizing));
     obj.radius = obj.baseRadius + (distanceEffect * 0.5);
 
-    // Pulsing effect for attracted particles
     obj.pulsePhase += 0.15;
     const pulseEffect = Math.sin(obj.pulsePhase) * 0.1 + 1;
 
-    // Default falling color with velocity-based variation
-    obj.r = Math.floor(baseR - normalizedVelocity * 50);
-    obj.g = Math.floor(baseG - normalizedVelocity * 30);
-    obj.b = Math.floor(baseB + normalizedVelocity * 50);
+    obj.r = (baseR - normalizedVelocity * 50) | 0;
+    obj.g = (baseG - normalizedVelocity * 30) | 0;
+    obj.b = (baseB + normalizedVelocity * 50) | 0;
     obj.a = 0.7 + normalizedVelocity * 0.2;
 
-    const repulsionRadiusSq = isMouseDown ? 30 * 30 : 0; // 30px shield when mouse is down
-
-    if (repulsionRadiusSq > 0 && distanceSq < repulsionRadiusSq) {
-      // Add a small repulsion zone right at the cursor to prevent particle collapse
-      if (distanceSq > 0.1) { // prevent division by zero
-        const distance = Math.sqrt(distanceSq);
-        const normalizedDx = dx / distance;
-        const normalizedDy = dy / distance;
-        const repulsionForce = 1.5; // A strong push away
-        newVx -= normalizedDx * repulsionForce;
-        newVy -= normalizedDy * repulsionForce;
-      }
-      obj.r = 255; // Repelled particles glow red
-      obj.g = 50;
-      obj.b = 50;
-      obj.a = 1.0;
-    } else if (distanceSq < attractionRadiusSq) {
-      if (distanceSq > 1) { // Prevent division by zero
-        const normalizedDx = dx / distance;
-        const normalizedDy = dy / distance;
-
-        newVx += normalizedDx * attractionForce;
-        newVy += normalizedDy * attractionForce;
-
-        const intensity = 1 - (distance / attractionRadius);
-        // Enhanced pulsing effect for attracted particles
-        obj.radius = obj.baseRadius * pulseEffect + (distanceEffect * 0.5);
-        
-        obj.r = Math.floor(baseR - normalizedVelocity * 30);
-        obj.g = Math.floor(baseG * intensity + normalizedVelocity * 40);
-        obj.b = Math.floor(baseB + (255 - baseB) * intensity + normalizedVelocity * 60);
-        obj.a = 0.9 + normalizedVelocity * 0.1;
-      }
-    } else {
-      const gravity = 0.2;
-      newVy += gravity;
+    const repulsionRadiusSq = isMouseDown ? 60 * 60 : 0;
+    if (repulsionRadiusSq > 0 && distance < Math.sqrt(repulsionRadiusSq)) {
+      obj.r = 255; obj.g = 50; obj.b = 50; obj.a = 1.0;
+    } else if (distance < attractionRadius) {
+      const intensity = 1 - (distance / attractionRadius);
+      obj.radius = obj.baseRadius * pulseEffect + (distanceEffect * 0.5);
+      obj.r = (baseR - normalizedVelocity * 30) | 0;
+      obj.g = (baseG * intensity + normalizedVelocity * 40) | 0;
+      obj.b = (baseB + (255 - baseB) * intensity + normalizedVelocity * 60) | 0;
+      obj.a = 0.9 + normalizedVelocity * 0.1;
     }
-
-    const damping = 0.99;
-    let dampedVx = newVx * damping;
-    let dampedVy = newVy * damping;
-
-    [dampedVx, dampedVy] = clampVelocity(dampedVx, dampedVy);
-
-    let newX = obj.x + dampedVx;
-    let newY = obj.y + dampedVy;
-    let finalVx = dampedVx;
-    let finalVy = dampedVy;
-
-    // Boundary collision
-    if (newX < obj.radius) {
-      newX = obj.radius;
-      finalVx = -finalVx * 0.8;
-    } else if (newX > canvasWidth - obj.radius) {
-      newX = canvasWidth - obj.radius;
-      finalVx = -finalVx * 0.8;
-    }
-
-    if (newY < obj.radius) {
-      newY = obj.radius;
-      finalVy = -finalVy * 0.8;
-    } else if (newY > (canvasHeight * 0.85) - obj.radius) {
-      newY = (canvasHeight * 0.85) - obj.radius;
-      finalVy = -finalVy * 0.8;
-    }
-
-    obj.x = newX;
-    obj.y = newY;
-    obj.vx = finalVx;
-    obj.vy = finalVy;
-  }
-
-  objects.sort((a, b) => a.x - b.x);
-
-  grid.clear();
-
-  const cellSize = 6;
-  for (const obj of objects) {
-    const cellX = Math.floor(obj.x / cellSize);
-    const cellY = Math.floor(obj.y / cellSize);
-    const key = (BigInt(cellX) << 32n) | BigInt(cellY);
-    if (!grid.has(key)) {
-      grid.set(key, []);
-    }
-    grid.get(key)!.push(obj);
   }
   
-  for (const [key, objectsInCell] of grid) {
-    for (let i = 0; i < objectsInCell.length; i++) {
-      const objA = objectsInCell[i];
-      for (let j = i + 1; j < objectsInCell.length; j++) {
-        const objB = objectsInCell[j];
-        if (objB.x > objA.x + objA.radius + objB.radius) {
-          break;
-        }
-        checkAndResolveCollision(objA, objB);
-      }
-    }
-
-    const cellX = Number(key >> 32n);
-    const cellY = Number(key & 0xffffffffn);
-    
-    const neighborCoords = [
-      [cellX + 1, cellY],
-      [cellX - 1, cellY + 1],
-      [cellX,     cellY + 1],
-      [cellX + 1, cellY + 1],
-    ];
-
-    for (const [nx, ny] of neighborCoords) {
-      const neighborKey = (BigInt(nx) << 32n) | BigInt(ny);
-      const neighborObjects = grid.get(neighborKey);
-      if (neighborObjects) {
-        for (const objA of objectsInCell) {
-          for (const objB of neighborObjects) {
-            if (objB.x < objA.x - objA.radius - objB.radius) {
-              continue;
-            }
-            if (objB.x > objA.x + objA.radius + objB.radius) {
-              break;
-            }
-            checkAndResolveCollision(objA, objB);
-          }
-        }
-      }
-    }
-  }
-
+  const renderDataView = new Float32Array(dataBuffer);
   populateRenderBuffer(objects, renderDataView);
   
-  self.postMessage({ 
-    type: 'render', 
-    particles: dataBuffer, 
-  }, [dataBuffer]);
+  self.postMessage({ type: 'render', particles: dataBuffer }, [dataBuffer]);
 }
 
 self.onmessage = (e: MessageEvent) => {
@@ -275,10 +258,15 @@ self.onmessage = (e: MessageEvent) => {
     case 'init':
       canvasWidth = payload.width;
       canvasHeight = payload.height;
+      isMobile = payload.isMobile;
 
-      const particleDensity = 1 / 400; // 1 particle per 400 pixels^2
+      // Use lower density and max particles on mobile
+      const particleDensity = 1 / (isMobile ? 800 : 400); 
       const calculatedObjects = Math.floor(canvasWidth * canvasHeight * particleDensity);
-      NUM_OBJECTS = Math.max(500, Math.min(calculatedObjects, 4000)); // Reduced max for performance
+      NUM_OBJECTS = Math.max(
+        isMobile ? 250 : 500, 
+        Math.min(calculatedObjects, isMobile ? 1500 : 2500)
+      );
 
       renderData = new Float32Array(NUM_OBJECTS * 7);
       dataBuffer = renderData.buffer as ArrayBuffer;

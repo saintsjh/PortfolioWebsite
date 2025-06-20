@@ -54,9 +54,14 @@ const PhysicsCanvas = ({ pullStrength = 0.3, baseColor = '#ffd280' }: PhysicsCan
       
       // On the first resize, initialize the worker.
       if (!latestParticleBuffer.current) {
+        const isMobile = window.matchMedia('(max-width: 768px)').matches;
         worker.postMessage({
           type: 'init',
-          payload: { width: canvas.width, height: canvas.height },
+          payload: { 
+            width: canvas.width, 
+            height: canvas.height,
+            isMobile: isMobile 
+          },
         });
       } else {
         // On subsequent resizes, just notify the worker of the new dimensions.
