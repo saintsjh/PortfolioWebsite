@@ -58,13 +58,21 @@ export default function MoreAboutMe() {
                       {(section.body.jobs as Job[]).map((job, jobIndex) => (
                         <div className="experience-item" key={`job-${jobIndex}`}>
                           <div className="experience-header">
-                              <h3 className="experience-title">{job.title}</h3>
-                              <span className="experience-company"> @ {job.company}</span>
+                              <h3 className="experience-title">
+                                <TypingEffect text={job.title} showBlinkingCursor={false} />
+                              </h3>
+                              <span className="experience-company">
+                                <TypingEffect text={`@ ${job.company}`} showBlinkingCursor={false} />
+                              </span>
                           </div>
-                          <p className="experience-date">{job.date}</p>
+                          <p className="experience-date">
+                            <TypingEffect text={job.date} showBlinkingCursor={false} />
+                          </p>
                           <ul className="experience-description">
                             {job.description.map((desc: string, descIndex: number) => (
-                              <li key={`desc-${descIndex}`}>{desc}</li>
+                              <li key={`desc-${descIndex}`}>
+                                <TypingEffect text={desc} showBlinkingCursor={false} />
+                              </li>
                             ))}
                           </ul>
                         </div>
