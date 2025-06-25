@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@import "../styles/theme.css";
+@import "../styles/base.css";
+@import "../styles/layout.css";
+@import "../styles/components.css";
+@import "../styles/physics.css";
+@import "../styles/pages.css";
+
 /* Define the Ayu Mirage color palette */
 :root {
   --ayu-bg: #212733;
@@ -245,7 +252,7 @@ li.list-item {
   align-items: flex-start;
   background-color: var(--ayu-orange); 
   padding: 8px;
-  border-radius: 24px;
+  border-radius: 58px;
   z-index: 10;
 }
 

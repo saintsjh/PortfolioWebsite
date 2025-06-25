@@ -1,4 +1,4 @@
-// Type definitions for the homepage content
+// Homepage content types
 interface HeadingBody {
   type: 'heading';
   text: string;
@@ -39,7 +39,7 @@ interface ImageContent2 {
 
 export type HomeContentItem = SectionContent | ImageContent | ListItemContent | ImageContent2;
 
-// Collection of "Hello" greetings in different languages
+// Greetings in different languages
 export const greetings = [
   'Hello',
   'Hola',
@@ -63,13 +63,13 @@ export const greetings = [
   'Aloha'
 ];
 
-// Function to get a random greeting
+// Get random greeting
 export const getRandomGreeting = (): string => {
   const randomIndex = Math.floor(Math.random() * greetings.length);
   return greetings[randomIndex].trim().replace(/\s+/g, ' ').trim();
 };
 
-// The actual content for the homepage
+// Homepage content data
 export const homeContent: HomeContentItem[] = [
   {
     type: 'section',
@@ -87,7 +87,7 @@ export const homeContent: HomeContentItem[] = [
       type: 'paragraph',
       text: "I have a passion for working with people making projects.",
       text2: "I'm experienced with building full stack and mobile apps.",
-      text3: "  Using tech like React, Next.js, TypeScript, .Net.",
+      text3: "Using tech like React, Next.js, TypeScript, .Net.",
     },
   },
   {

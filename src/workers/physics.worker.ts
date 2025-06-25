@@ -1,7 +1,8 @@
+import { WorkerMessage, RenderMessage } from "@/types/physics-worker";
+
 /// <reference lib="webworker" />
 
-// The pinnacle of particle physics simulation, crafted for performance and stability.
-// Every line of code here is to ensure my family eats.
+// Particle physics simulation worker
 
 interface FlyingObject {
   id: number;
@@ -19,7 +20,7 @@ interface FlyingObject {
   pulsePhase: number;
 }
 
-// State variables for our world-class simulation.
+// Simulation world state
 let objects: FlyingObject[] = [];
 let canvasWidth = 0;
 let canvasHeight = 0;
@@ -28,33 +29,22 @@ let isMouseDown = false;
 let NUM_OBJECTS = 0;
 let isMobile = false;
 
+// Simulation parameters
 let attractionRadiusSq = 200 * 200;
 let attractionRadius = 200;
 let attractionForce = 0.3;
 let baseR = 255, baseG = 210, baseB = 128;
 
-// With sub-stepping, we can allow for higher velocities without tunneling.
 const MAX_VELOCITY = 15; 
 const MAX_VELOCITY_SQ = MAX_VELOCITY * MAX_VELOCITY;
 
-// The spatial grid for broad-phase collision detection. A cornerstone of high-performance physics.
+const CELL_SIZE = 12;
 const grid = new Map<bigint, FlyingObject[]>();
-const CELL_SIZE = 12; // Increased for greater optimization, reducing grid management overhead.
 
 let renderData: Float32Array;
 let dataBuffer: ArrayBuffer;
 
-// // ANTI-TUNNELING
-// function clampVelocity(vx: number, vy: number): [number, number] {
-//   const velocitySq = vx * vx + vy * vy;
-//   if (velocitySq > MAX_VELOCITY_SQ) {
-//     const velocity = Math.sqrt(velocitySq);
-//     const scale = MAX_VELOCITY / velocity;
-//     return [vx * scale, vy * scale];
-//   }
-//   return [vx, vy];
-// }
-
+// Collision detection and resolution
 function checkAndResolveCollision(objA: FlyingObject, objB: FlyingObject) {
     const dx = objB.x - objA.x;
     const dy = objB.y - objA.y;
@@ -67,19 +57,19 @@ function checkAndResolveCollision(objA: FlyingObject, objB: FlyingObject) {
         const nx = dx / distance;
         const ny = dy / distance;
 
-        // Separate the objects to prevent overlap
+        // Separate objects to prevent overlap
         const overlap = (minDistance - distance) * 0.5;
         objA.x -= overlap * nx;
         objA.y -= overlap * ny;
         objB.x += overlap * nx;
         objB.y += overlap * ny;
 
-        // Impulse-based collision response for a realistic bounce
+        // Calculate impulse for collision response
         const relVelX = objB.vx - objA.vx;
         const relVelY = objB.vy - objA.vy;
         const velAlongNormal = relVelX * nx + relVelY * ny;
 
-        if (velAlongNormal > 0) return; // Objects are already moving apart
+        if (velAlongNormal > 0) return;
 
         const restitution = 0.8;
         const impulse = -(1 + restitution) * velAlongNormal / (1 / objA.mass + 1 / objB.mass);
@@ -91,7 +81,7 @@ function checkAndResolveCollision(objA: FlyingObject, objB: FlyingObject) {
     }
 }
 
-// OPTIMIZATION
+// Populate render buffer with particle data
 function populateRenderBuffer(objects: FlyingObject[], renderDataView: Float32Array) {
   for (let i = 0; i < objects.length; i++) {
     const obj = objects[i];
@@ -106,15 +96,13 @@ function populateRenderBuffer(objects: FlyingObject[], renderDataView: Float32Ar
   }
 }
 
-// The core physics update function. It's called multiple times per frame (sub-stepping).
+// Core physics update function
 function updatePhysics(dt: number) {
-  // 1. Apply forces and update velocities
+  // Apply forces and update velocities
   for (const obj of objects) {
     const dx = mousePos.x - obj.x;
     const dy = mousePos.y - obj.y;
     const distanceSq = dx * dx + dy * dy;
-
-    // --- Forces ---
     const repulsionRadiusSq = isMouseDown ? 60 * 60 : 0;
     if (repulsionRadiusSq > 0 && distanceSq < repulsionRadiusSq) {
       if (distanceSq > 0.1) {
@@ -134,17 +122,16 @@ function updatePhysics(dt: number) {
         obj.vy += ny * attractionForce;
       }
     } else {
-      const gravity = 0.4;
+      const gravity = 0.0000001;
       obj.vy += gravity;
     }
 
-    // --- Damping ---
-    // Reduced damping for more momentum, especially on mobile.
+    // Damping
     const damping = isMobile ? 0.98 : 0.99;
     obj.vx *= damping;
     obj.vy *= damping;
 
-    // --- Clamp Velocity ---
+    // Clamp velocity
     const velocitySq = obj.vx * obj.vx + obj.vy * obj.vy;
     if (velocitySq > MAX_VELOCITY_SQ) {
       const scale = MAX_VELOCITY / Math.sqrt(velocitySq);
@@ -152,13 +139,12 @@ function updatePhysics(dt: number) {
       obj.vy *= scale;
     }
 
-    // --- Update Position ---
+    // Update position
     obj.x += obj.vx * dt;
     obj.y += obj.vy * dt;
   }
 
-  // 2. Solve constraints (collisions)
-  // Re-populate the spatial grid for the new positions
+  // Solve collisions using spatial grid
   grid.clear();
   for (const obj of objects) {
     const cellX = (obj.x / CELL_SIZE) | 0;
@@ -168,19 +154,19 @@ function updatePhysics(dt: number) {
     grid.get(key)!.push(obj);
   }
 
-  // Check for collisions within each cell and with neighboring cells
+  // Check collisions within cells and neighbors
   for (const [key, objectsInCell] of grid) {
     const cellX = Number(key >> 32n);
     const cellY = Number(key & 0xffffffffn);
     
-    // Check within the cell
+    // Check within cell
     for (let i = 0; i < objectsInCell.length; i++) {
         for (let j = i + 1; j < objectsInCell.length; j++) {
             checkAndResolveCollision(objectsInCell[i], objectsInCell[j]);
         }
     }
 
-    // Check with neighbor cells (only 4 directions to avoid double-checking)
+    // Check neighbor cells
     const neighborCoords = [[cellX + 1, cellY], [cellX - 1, cellY + 1], [cellX, cellY + 1], [cellX + 1, cellY + 1]];
     for (const [nx, ny] of neighborCoords) {
         const neighborKey = (BigInt(nx) << 32n) | BigInt(ny);
@@ -195,7 +181,7 @@ function updatePhysics(dt: number) {
     }
   }
 
-  // 3. Boundary constraints
+  // Boundary constraints
   for (const obj of objects) {
     if (obj.x < obj.radius) { obj.x = obj.radius; obj.vx *= -0.5; }
     else if (obj.x > canvasWidth - obj.radius) { obj.x = canvasWidth - obj.radius; obj.vx *= -0.5; }
@@ -204,17 +190,17 @@ function updatePhysics(dt: number) {
   }
 }
 
-// The main simulation loop, now a manager for the sub-stepped physics engine.
+// Main simulation loop
 function runSimulation() {
-  // Sub-stepping for stability. We run the simulation in smaller, fixed time steps.
+  // Sub-stepping for stability
   const numSubSteps = 5;
-  const dt = 1 / numSubSteps; // Delta time for each sub-step
+  const dt = 1 / numSubSteps;
 
   for (let i = 0; i < numSubSteps; i++) {
     updatePhysics(dt);
   }
 
-  // After physics is stable, update visual properties (color, size)
+  // Update visual properties
   for (const obj of objects) {
     const velocitySq = obj.vx * obj.vx + obj.vy * obj.vy;
     const normalizedVelocity = Math.min(velocitySq / MAX_VELOCITY_SQ, 1);
@@ -248,67 +234,68 @@ function runSimulation() {
   const renderDataView = new Float32Array(dataBuffer);
   populateRenderBuffer(objects, renderDataView);
   
-  self.postMessage({ type: 'render', particles: dataBuffer }, [dataBuffer]);
+  const message: RenderMessage = { type: 'render', particles: dataBuffer };
+  (self as any).postMessage(message, [dataBuffer]);
 }
 
-self.onmessage = (e: MessageEvent) => {
+// Handle messages from main thread
+self.onmessage = (e: MessageEvent<WorkerMessage>) => {
   const { type, payload } = e.data;
 
   switch (type) {
-    case 'init':
+    case 'init': {
       canvasWidth = payload.width;
       canvasHeight = payload.height;
       isMobile = payload.isMobile;
+      NUM_OBJECTS = isMobile ? 1200 : 2500;
+      attractionRadius = Math.min(canvasWidth, canvasHeight) * 0.3;
+      attractionRadiusSq = attractionRadius * attractionRadius;
 
-      // Use lower density and max particles on mobile
-      const particleDensity = 1 / (isMobile ? 800 : 400); 
-      const calculatedObjects = Math.floor(canvasWidth * canvasHeight * particleDensity);
-      NUM_OBJECTS = Math.max(
-        isMobile ? 250 : 500, 
-        Math.min(calculatedObjects, isMobile ? 1500 : 2500)
-      );
-
-      renderData = new Float32Array(NUM_OBJECTS * 7);
-      dataBuffer = renderData.buffer as ArrayBuffer;
+      objects = [];
+      for (let i = 0; i < NUM_OBJECTS; i++) {
+        const radius = Math.random() * (isMobile ? 1.5 : 2.5) + 1;
+        objects.push({
+          id: i,
+          x: Math.random() * canvasWidth,
+          y: Math.random() * canvasHeight * 0.5,
+          vx: (Math.random() - 0.5) * 5,
+          vy: (Math.random() - 0.5) * 5,
+          radius,
+          mass: radius * radius * 0.1,
+          r: baseR, g: baseG, b: baseB, a: 1,
+          baseRadius: radius,
+          pulsePhase: Math.random() * Math.PI * 2,
+        });
+      }
       
-      objects = Array.from({ length: NUM_OBJECTS }, (_, i) => ({
-        id: i,
-        x: Math.random() * canvasWidth,
-        y: Math.random() * canvasHeight,
-        vx: (Math.random() - 0.5) * 2,
-        vy: (Math.random() - 0.5) * 2,
-        radius: 1.2, 
-        mass: 1,
-        r: 255,
-        g: 210,
-        b: 128,
-        a: 0.7,
-        baseRadius: 1.2,
-        pulsePhase: Math.random() * Math.PI * 2,
-      }));
+      dataBuffer = new ArrayBuffer(NUM_OBJECTS * 7 * 4);
       runSimulation();
       break;
-    case 'updateMouse':
+    }
+    case 'resize': {
+      canvasWidth = payload.width;
+      canvasHeight = payload.height;
+      attractionRadius = Math.min(canvasWidth, canvasHeight) * 0.3;
+      attractionRadiusSq = attractionRadius * attractionRadius;
+      break;
+    }
+    case 'updateMouse': {
       mousePos = payload.mousePos;
       isMouseDown = payload.isMouseDown;
-      attractionRadiusSq = isMouseDown ? 300 * 300 : 100 * 100;
-      attractionRadius = isMouseDown ? 300 : 100;
       break;
-        case 'bufferBack': 
+    }
+    case 'bufferBack': {
       dataBuffer = payload.particles;
       runSimulation();
       break;
-    case 'resize':
-        canvasWidth = payload.width;
-        canvasHeight = payload.height;
-        break;
-    case 'updateSettings':
-        attractionForce = payload.pullStrength;
-        // Convert hex color to RGB
-        const hex = payload.baseColor.replace('#', '');
-        baseR = parseInt(hex.substring(0, 2), 16);
-        baseG = parseInt(hex.substring(2, 4), 16);
-        baseB = parseInt(hex.substring(4, 6), 16);
-        break;
+    }
+    case 'updateSettings': {
+      attractionForce = payload.pullStrength;
+      const hex = payload.baseColor.replace('#', '');
+      baseR = parseInt(hex.substring(0, 2), 16);
+      baseG = parseInt(hex.substring(2, 4), 16);
+      baseB = parseInt(hex.substring(4, 6), 16);
+      break;
+    }
   }
 }; 

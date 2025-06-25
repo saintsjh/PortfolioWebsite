@@ -1,0 +1,88 @@
+body {
+  background-color: var(--ayu-bg);
+  color: var(--ayu-fg);
+  font-family: var(--font-fira-code), monospace;
+}
+
+.title {
+  font-size: 1.50rem;
+  text-align: left;
+  letter-spacing: -0.05em;
+  font-weight: 100;
+  font-family: var(--font-fira-code), monospace;
+  margin-left: 20px;
+  margin-top: 15px;
+}
+
+.subtitle {
+  margin-top: 1rem;
+  font-size: 1.25rem; /* 20px */
+  text-align: center;
+  /* A slightly dimmer color than the main text */
+  color: color-mix(in srgb, var(--ayu-fg) 70%, transparent);
+}
+
+.content {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 2.5rem;
+  max-width: 56rem;
+  padding: 2rem;
+  text-align: left;
+}
+
+.main-heading {
+  font-size: 1.50rem;
+  font-weight: 100;
+  font-family: var(--font-fira-code), monospace;
+  margin-top: 15px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.desktop-only {
+  display: block;
+}
+
+.mobile-layout {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-layout {
+    display: block;
+  }
+}
+
+.typing-wrapper {
+  display: inline-block;
+}
+.ghost-text {
+  color: transparent;
+}
+.visible-typing-text {
+  display: inline;
+  color: inherit;
+  font-weight: inherit;
+  font-family: inherit;
+  letter-spacing: inherit;
+}
+.about-me-text {
+  line-height: 1.6;
+}
+.about-me-text-wrap {
+  white-space: pre-wrap;
+}
+.project-link-wrap {
+  white-space: normal;
+  display: inline-block;
+  line-height: 1.2;
+}
+.project-number {
+  color: var(--ayu-orange);
+  opacity: 0.7;
+} 

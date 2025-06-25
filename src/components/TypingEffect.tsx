@@ -4,9 +4,9 @@ import { useState, useEffect, useRef, ReactNode, memo } from 'react';
 
 interface TypingEffectProps {
   text: string;
-  speed?: number; // Time in ms to stagger the reveal of each character
+  speed?: number;
   className?: string;
-  glitchClassName?: string; // CSS class for the glitching characters
+  glitchClassName?: string;
   showBlinkingCursor?: boolean;
   onFinished?: () => void;
 }
@@ -15,11 +15,10 @@ const TypingEffect: React.FC<TypingEffectProps> = ({
   text, 
   speed = 25, 
   className, 
-  glitchClassName = 'text-ayu-green', // Default bright color for glitching
+  glitchClassName = 'text-ayu-green',
   showBlinkingCursor = false,
   onFinished
 }) => {
-  // State now holds an array of React nodes (styled spans)
   const [displayedNodes, setDisplayedNodes] = useState<ReactNode[]>([]);
   const [showCursor, setShowCursor] = useState(false);
   
@@ -36,7 +35,7 @@ const TypingEffect: React.FC<TypingEffectProps> = ({
   useEffect(() => {
     if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     if (intervalRef.current) clearInterval(intervalRef.current);
-    setDisplayedNodes([]); // Start with a blank slate
+    setDisplayedNodes([]);
 
     const specialChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!<>-_\\/[]{}—=+*^?#";
     
@@ -45,8 +44,7 @@ const TypingEffect: React.FC<TypingEffectProps> = ({
       settled: false,
       revealTime: index * speed, 
       glitchCounter: 0,
-      // More varied and slightly longer glitch duration for a chaotic feel
-      glitchDuration: 20 + Math.random() * 20, // ~20-40 frames
+      glitchDuration: 20 + Math.random() * 20,
     }));
 
     let startTime: number;
@@ -58,7 +56,6 @@ const TypingEffect: React.FC<TypingEffectProps> = ({
       const allSettled = textChars.current.every(c => c.settled);
 
       const newNodes = textChars.current.map((charState, index) => {
-        // If it's not time to reveal this character yet, render nothing.
         if (elapsedTime < charState.revealTime) {
           return null;
         }
@@ -67,7 +64,7 @@ const TypingEffect: React.FC<TypingEffectProps> = ({
           return <span key={index}>{charState.finalChar}</span>;
         }
         
-        // Handle spaces: they settle instantly without glitching.
+        // Spaces settle instantly without glitching
         if (charState.finalChar === ' ') {
           charState.settled = true;
           return <span key={index}> </span>;
@@ -76,7 +73,6 @@ const TypingEffect: React.FC<TypingEffectProps> = ({
         if (charState.glitchCounter < charState.glitchDuration) {
           charState.glitchCounter++;
           const randomChar = specialChars[Math.floor(Math.random() * specialChars.length)];
-          // Render the glitching character with the specified class
           return <span key={index} className={glitchClassName}>{randomChar}</span>;
         } else {
           charState.settled = true;
@@ -89,7 +85,7 @@ const TypingEffect: React.FC<TypingEffectProps> = ({
       if (!allSettled) {
         animationFrameRef.current = requestAnimationFrame(animate);
       } else {
-        // Final render to ensure clean text, then start cursor
+        // Final render and start cursor
         setDisplayedNodes(text.split('').map((char, index) => <span key={index}>{char}</span>));
         if (showBlinkingCursor) {
           setShowCursor(true);

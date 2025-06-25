@@ -1,0 +1,110 @@
+.more-about-me .text-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  padding-left: 0;
+}
+
+@media (max-width: 768px) {
+  .more-about-me .text-content {
+    padding: 1rem;
+  }
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+}
+
+.skill-category {
+  /* No specific styles needed here, but class is kept for structure */
+}
+
+.skill-category-title {
+  font-weight: 700;
+  color: var(--ayu-orange);
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--ayu-comment);
+  padding-bottom: 0.25rem;
+}
+
+.skills-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.skills-list li {
+  margin-bottom: 0.25rem;
+}
+
+.experience-list {
+  list-style: none;
+  padding: 0;
+}
+
+.experience-item {
+  margin-bottom: 2rem;
+}
+
+.experience-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: baseline;
+  flex-wrap: wrap; /* Allow wrapping on small screens */
+}
+
+.experience-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.experience-company {
+  font-style: italic;
+  color: var(--ayu-cyan);
+}
+
+.experience-date {
+  color: var(--ayu-comment);
+  font-size: 0.9rem;
+  margin-left: 1rem;
+}
+
+.experience-description {
+  margin-top: 0.5rem;
+  padding-left: 1rem;
+}
+
+.experience-description li {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+/* More About Me Page Styles */
+.sections-container-desktop {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 4rem;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.sections-container-mobile {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2rem;
+}
+
+.content-section-column {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-top: 2rem;
+  border-left: none !important; /* Explicitly remove any left border */
+}
+
+.content-section-column .section-heading {
+  flex: 0 0 100px;
+} 

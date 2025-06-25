@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import TypingEffect from "@/components/TypingEffect";
-import { homeContent, getRandomGreeting } from './home-content'; // Import the content data
+import { homeContent, getRandomGreeting } from './home-content';
 import { useMediaQuery } from 'react-responsive';
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import NavBar from "@/components/NavBar";
@@ -13,14 +13,14 @@ export default function Home() {
   const [animationsFinished, setAnimationsFinished] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   
-  // Memoize random greeting so it doesn't change on re-renders
+  // Memoize random greeting
   const randomHello = useMemo(() => getRandomGreeting(), []);
 
-  // --- Animation Finished Logic ---
+  // Animation finished logic
   const totalAnimations = useMemo(() => {
-    if (isMobile) return 0; // No finish tracking needed on mobile
-    // Calculate the total number of typing animations for desktop
-    let count = 2; // For the main heading
+    if (isMobile) return 0;
+    // Calculate typing animations for desktop
+    let count = 2;
     homeContent.forEach(item => {
       if (item.type === 'section' && item.body.type === 'paragraph') {
         count++;
@@ -43,7 +43,7 @@ export default function Home() {
     }
   }, [totalAnimations, isMobile]);
 
-  // Create a stable, empty function for mobile animations that don't need tracking.
+  // Empty callback for mobile animations
   const emptyCallback = useCallback(() => {}, []);
 
   useEffect(() => {
@@ -53,14 +53,14 @@ export default function Home() {
   const image = (isMounted && isMobile) ? '/imgs/logo-gradient-jh.svg' : '/imgs/IMG_2635.jpeg';
   
   if (!isMounted) {
-    return null; // or a loading spinner
+    return null;
   }
 
   return (
     <main>
       <NavBar currentPage="home" />
 
-      {/* --- DESKTOP LAYOUT --- */}
+      {/* Desktop layout */}
       <div className="main-content-container desktop-only">
         <div className="text-content">
           {homeContent.map((item, index) => {
@@ -155,10 +155,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* --- MOBILE LAYOUT --- */}
+      {/* Mobile layout */}
       <div className="mobile-layout">
         <div className="mobile-header">
-           {/* This empty div will act as a flexible spacer */}
+           {/* Flexible spacer */}
           <div className="mobile-header-left">
               <h1 className="main-heading">
                 <span style={{ color: 'var(--ayu-orange)' }}>

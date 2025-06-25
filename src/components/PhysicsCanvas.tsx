@@ -1,19 +1,18 @@
+// Full-screen canvas with particle simulation in Web Worker
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-
-// The component no longer needs a specific interface for the objects,
-// as it will receive a raw ArrayBuffer.
+import { RenderMessage, WorkerMessage } from '@/types/physics-worker';
 
 interface PhysicsCanvasProps {
   pullStrength?: number;
   baseColor?: string;
 }
 
+// Particle simulation component using Web Worker for physics calculations
 const PhysicsCanvas = ({ pullStrength = 0.3, baseColor = '#ffd280' }: PhysicsCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const workerRef = useRef<Worker | null>(null);
-  // This ref will now store the ArrayBuffers received from the worker.
   const latestParticleBuffer = useRef<ArrayBuffer | null>(null);
   const animationFrameId = useRef<number | null>(null);
   const lastMousePos = useRef({ x: 0, y: 0 });
@@ -41,8 +40,7 @@ const PhysicsCanvas = ({ pullStrength = 0.3, baseColor = '#ffd280' }: PhysicsCan
     });
     workerRef.current = worker;
 
-    // This listener now receives render data with particles.
-    worker.onmessage = (e: MessageEvent) => {
+    worker.onmessage = (e: MessageEvent<RenderMessage>) => {
       if (e.data && e.data.type === 'render') {
         latestParticleBuffer.current = e.data.particles;
       }
@@ -52,42 +50,40 @@ const PhysicsCanvas = ({ pullStrength = 0.3, baseColor = '#ffd280' }: PhysicsCan
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       
-      // On the first resize, initialize the worker.
+      // Initialize worker on first resize
       if (!latestParticleBuffer.current) {
         const isMobile = window.matchMedia('(max-width: 768px)').matches;
-        worker.postMessage({
+        const message: WorkerMessage = {
           type: 'init',
           payload: { 
             width: canvas.width, 
             height: canvas.height,
             isMobile: isMobile 
           },
-        });
+        };
+        worker.postMessage(message);
       } else {
-        // On subsequent resizes, just notify the worker of the new dimensions.
-        worker.postMessage({
+        // Notify worker of dimension changes
+        const message: WorkerMessage = {
           type: 'resize',
           payload: { width: canvas.width, height: canvas.height },
-        });
+        };
+        worker.postMessage(message);
       }
     };
     resizeCanvas();
     
     const animate = () => {
-      // The guard clause now works perfectly. If the refs are null, we wait.
       if (!latestParticleBuffer.current) {
         animationFrameId.current = requestAnimationFrame(animate);
         return;
       }
 
-      // Take ownership of the buffers for this frame.
       const particleBuffer = latestParticleBuffer.current;
-      // Immediately nullify the refs.
       latestParticleBuffer.current = null;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Render particles
       const particleData = new Float32Array(particleBuffer);
       const numObjects = particleData.length / 7;
       
@@ -107,12 +103,13 @@ const PhysicsCanvas = ({ pullStrength = 0.3, baseColor = '#ffd280' }: PhysicsCan
         ctx.fill();
       }
 
-      // IMPORTANT: Transfer buffers back to the worker.
+      // Transfer buffers back to worker
       const transferList = [particleBuffer];
-      worker.postMessage({ 
+      const message: WorkerMessage = { 
         type: 'bufferBack', 
         payload: { particles: particleBuffer } 
-      }, transferList);
+      };
+      worker.postMessage(message, transferList);
       
       animationFrameId.current = requestAnimationFrame(animate);
     };
@@ -120,14 +117,14 @@ const PhysicsCanvas = ({ pullStrength = 0.3, baseColor = '#ffd280' }: PhysicsCan
 
     const handleMouseEvent = (e: MouseEvent) => {
       lastMousePos.current = { x: e.clientX, y: e.clientY };
-      // For any mouse event, package the necessary info and send it to the worker.
-      worker.postMessage({
+      const message: WorkerMessage = {
         type: 'updateMouse',
         payload: {
           mousePos: { x: e.clientX, y: e.clientY },
-          isMouseDown: e.buttons === 1, // 'buttons' is a bitmask; 1 means primary button is down
+          isMouseDown: e.buttons === 1,
         },
-      });
+      };
+      worker.postMessage(message);
     };
 
     const handleTouch = (e: TouchEvent) => {
@@ -135,63 +132,64 @@ const PhysicsCanvas = ({ pullStrength = 0.3, baseColor = '#ffd280' }: PhysicsCan
       if (e.touches.length > 0) {
         const touch = e.touches[0];
         lastMousePos.current = { x: touch.clientX, y: touch.clientY };
-        worker.postMessage({
+        const message: WorkerMessage = {
           type: 'updateMouse',
           payload: {
             mousePos: { x: touch.clientX, y: touch.clientY },
             isMouseDown: true,
           },
-        });
+        };
+        worker.postMessage(message);
       }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
       e.preventDefault();
-      worker.postMessage({
+      const message: WorkerMessage = {
         type: 'updateMouse',
         payload: {
           mousePos: lastMousePos.current,
           isMouseDown: false,
         },
-      });
+      };
+      worker.postMessage(message);
     };
 
-    // Mouse events on window to allow interaction from anywhere
+    // Mouse events on window
     window.addEventListener('mousemove', handleMouseEvent);
     window.addEventListener('mousedown', handleMouseEvent);
     window.addEventListener('mouseup', handleMouseEvent);
     window.addEventListener('resize', resizeCanvas);
     
-    // Touch events on canvas to avoid interfering with other UI elements
+    // Touch events on canvas
     canvas.addEventListener('touchstart', handleTouch, { passive: false });
     canvas.addEventListener('touchmove', handleTouch, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
 
-    // Cleanup function: very important to terminate the worker!
+    // Cleanup
     return () => {
       window.removeEventListener('mousemove', handleMouseEvent);
       window.removeEventListener('mousedown', handleMouseEvent);
       window.removeEventListener('mouseup', handleMouseEvent);
       window.removeEventListener('resize', resizeCanvas);
-      // Remove touch listeners on cleanup from the canvas
       canvas.removeEventListener('touchstart', handleTouch);
       canvas.removeEventListener('touchmove', handleTouch);
       canvas.removeEventListener('touchend', handleTouchEnd);
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
-      // This stops the worker script from running in the background.
       worker.terminate();
     };
   }, []);
 
-  // Send settings updates to worker when props change
+  // Update worker settings when props change
   useEffect(() => {
     if (workerRef.current) {
-      workerRef.current.postMessage({
+      const message: WorkerMessage = {
         type: 'updateSettings',
         payload: { pullStrength, baseColor }
-      });
+      };
+      workerRef.current.postMessage(message);
     }
   }, [pullStrength, baseColor]);
 

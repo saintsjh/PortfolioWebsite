@@ -1,0 +1,13 @@
+/* Define the Ayu Mirage color palette */
+:root {
+  --ayu-bg: #212733;
+  --ayu-fg: #D9D7CE;
+  --ayu-red: #FF7777;
+  --ayu-orange: #FFD280;
+  --ayu-yellow: #F2D479;
+  --ayu-green: #C2D94C;
+  --ayu-cyan: #7EDDDE;
+  --ayu-blue: #73D0FF;
+  --ayu-purple: #DDBBFF;
+  --ayu-comment: #5C6773;
+} 

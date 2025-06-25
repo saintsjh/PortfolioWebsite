@@ -1,0 +1,53 @@
+.flying-object {
+  position: absolute;
+  /* Add other styles for flying objects if necessary */
+  will-change: transform;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.physics-character {
+  will-change: transform;
+  font-family: var(--font-fira-code), monospace;
+}
+.physics-character.list-item {
+  font-size: 1.0rem;
+}
+.physics-character.main-heading {
+  font-size: 1.5rem;
+  font-weight: 100;
+  line-height: 1.2;
+}
+
+[data-id] {
+  display: inline-block;
+  min-width: 0.2em; /* Ensure even spaces are measurable */
+}
+
+@media (max-width: 768px) {
+  .physics-character {
+    font-size: 0.9rem;
+  }
+  .physics-character.main-heading {
+    font-size: 1.25rem;
+  }
+  .physics-character.list-item {
+    font-size: 0.9rem;
+  }
+}
+
+.physics-blueprint .main-heading {
+  display: block; /* Ensures each heading is on its own line */
+}
+.physics-blueprint .section-body p {
+  display: block;
+}
+.physics-blueprint .main-heading {
+  font-size: 1.5rem;
+}
+
+.physics-blueprint .main-heading {
+  font-size: 1.50rem;
+  font-weight: 100;
+} 

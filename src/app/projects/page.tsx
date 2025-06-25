@@ -8,7 +8,7 @@ export default function Projects() {
   const glowRef = useRef<HTMLDivElement>(null);
   const [showControls, setShowControls] = useState(false);
   const [pullStrength, setPullStrength] = useState(0.3);
-  const [baseColor, setBaseColor] = useState('#ffd280'); // ayu orange
+  const [baseColor, setBaseColor] = useState('#ffd280');
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -60,7 +60,7 @@ export default function Projects() {
           opacity: '0',
         }}
       />
-      {/* Physics Controls */}
+      {/* Physics controls */}
       <div style={{
         position: 'fixed',
         top: '20px',

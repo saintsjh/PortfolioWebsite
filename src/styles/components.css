@@ -1,0 +1,185 @@
+.nav-header {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: var(--ayu-bg);
+  z-index: 100;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+.nav-link {
+  position: relative;
+  font-size: 1rem;
+  color: var(--ayu-fg);
+  text-decoration: none;
+  transition: color 0.2s;
+  font-family: var(--font-fira-code), monospace;
+}
+
+.nav-link:hover {
+  color: var(--ayu-orange);
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1.5px;
+  bottom: -5px;
+  left: 0;
+  background-color: var(--ayu-orange);
+  transition: width 0.3s ease-in-out;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+.nav-link-current {
+  color: var(--ayu-orange) !important;
+  cursor: default !important;
+}
+
+.nav-link-current:hover {
+  color: var(--ayu-orange) !important;
+}
+
+.nav-link-current::after {
+  width: 0 !important;
+}
+
+li.list-item {
+  list-style-type: none;
+  margin-top: 1rem;
+}
+
+.list-item a {
+  position: relative;
+  font-size: 1.0rem;
+  color: var(--ayu-fg);
+  text-decoration: none;
+  transition: color 0.2s;
+  padding-bottom: 5px;
+  font-family: var(--font-fira-code), monospace;
+}
+
+.list-item a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1.5px;
+  bottom: 0;
+  left: 0;
+  background-color: var(--ayu-orange);
+  transition: width 0.3s ease-in-out;
+}
+
+.list-item a:hover {
+  color: var(--ayu-orange);
+}
+
+.list-item a:hover::after {
+  width: 100%;
+}
+
+.activate-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  padding: 8px 16px;
+  background-color: var(--ayu-orange);
+  color: var(--ayu-bg);
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-fira-code), monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 101;
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.activate-button:hover {
+  background-color: var(--ayu-yellow);
+  transform: scale(1.05);
+}
+
+.stop-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  padding: 8px 16px;
+  background-color: var(--ayu-red);
+  color: var(--ayu-bg);
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-fira-code), monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 101;
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.stop-button:hover {
+  background-color: color-mix(in srgb, var(--ayu-red) 80%, white);
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .nav-header {
+    padding: 0.5rem 1rem;
+  }
+  .nav-links {
+    gap: 1rem;
+  }
+  .nav-link {
+    font-size: 0.9rem;
+  }
+  .activate-button {
+    bottom: auto;
+    top: 15px;
+    left: 15px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+  .stop-button {
+    bottom: auto;
+    top: 15px;
+    left: 15px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+  .list-item {
+    margin-top: 0.5rem;
+  }
+  .list-item a {
+    font-size: 0.9rem;
+    padding-bottom: 3px;
+  }
+}
+.description-wrapper {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease-in-out;
+}
+.description-wrapper.open {
+  max-height: 200px;
+}
+.project-description {
+  font-size: 0.85rem;
+  color: var(--ayu-comment);
+  padding: 0.5rem 0 0.5rem 2rem;
+  line-height: 1.4;
+  text-align: left;
+} 
