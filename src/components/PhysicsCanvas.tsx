@@ -1,4 +1,4 @@
-// Full-screen canvas with particle simulation in Web Worker
+
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -9,7 +9,6 @@ interface PhysicsCanvasProps {
   baseColor?: string;
 }
 
-// Particle simulation component using Web Worker for physics calculations
 const PhysicsCanvas = ({ pullStrength = 0.3, baseColor = '#ffd280' }: PhysicsCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const workerRef = useRef<Worker | null>(null);
@@ -50,7 +49,6 @@ const PhysicsCanvas = ({ pullStrength = 0.3, baseColor = '#ffd280' }: PhysicsCan
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       
-      // Initialize worker on first resize
       if (!latestParticleBuffer.current) {
         const isMobile = window.matchMedia('(max-width: 768px)').matches;
         const message: WorkerMessage = {
@@ -63,7 +61,6 @@ const PhysicsCanvas = ({ pullStrength = 0.3, baseColor = '#ffd280' }: PhysicsCan
         };
         worker.postMessage(message);
       } else {
-        // Notify worker of dimension changes
         const message: WorkerMessage = {
           type: 'resize',
           payload: { width: canvas.width, height: canvas.height },
@@ -103,7 +100,6 @@ const PhysicsCanvas = ({ pullStrength = 0.3, baseColor = '#ffd280' }: PhysicsCan
         ctx.fill();
       }
 
-      // Transfer buffers back to worker
       const transferList = [particleBuffer];
       const message: WorkerMessage = { 
         type: 'bufferBack', 
@@ -155,18 +151,15 @@ const PhysicsCanvas = ({ pullStrength = 0.3, baseColor = '#ffd280' }: PhysicsCan
       worker.postMessage(message);
     };
 
-    // Mouse events on window
     window.addEventListener('mousemove', handleMouseEvent);
     window.addEventListener('mousedown', handleMouseEvent);
     window.addEventListener('mouseup', handleMouseEvent);
     window.addEventListener('resize', resizeCanvas);
     
-    // Touch events on canvas
     canvas.addEventListener('touchstart', handleTouch, { passive: false });
     canvas.addEventListener('touchmove', handleTouch, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
 
-    // Cleanup
     return () => {
       window.removeEventListener('mousemove', handleMouseEvent);
       window.removeEventListener('mousedown', handleMouseEvent);
@@ -182,7 +175,6 @@ const PhysicsCanvas = ({ pullStrength = 0.3, baseColor = '#ffd280' }: PhysicsCan
     };
   }, []);
 
-  // Update worker settings when props change
   useEffect(() => {
     if (workerRef.current) {
       const message: WorkerMessage = {
@@ -224,7 +216,7 @@ const PhysicsCanvas = ({ pullStrength = 0.3, baseColor = '#ffd280' }: PhysicsCan
           left: 0,
           zIndex: -1,
           display: 'block',
-          touchAction: 'none', // Prevents scrolling/zooming on mobile
+          touchAction: 'none',
         }}
       />
     </>

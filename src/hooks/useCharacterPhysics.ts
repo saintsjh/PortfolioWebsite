@@ -1,48 +1,23 @@
-/**
- * @file This file contains the core logic for the character physics simulation,
- * encapsulated in a custom React hook.
- */
+
 import { useState, useEffect, useRef, useLayoutEffect, useMemo } from 'react';
 import { useMediaQuery } from 'react-responsive';
 import { HomeContentItem, getRandomGreeting } from '@/app/home-content';
 import { deconstructContent } from '@/utils/contentUtils';
-import { PhysicsObject, PhysicsState, DeconstructedItem } from '@/types';
+import { PhysicsObject, PhysicsState } from '@/types';
 
-/**
- * A custom hook to manage the state and logic of the character physics simulation.
- * 
- * This hook encapsulates all the complex state management, physics calculations,
- * event listeners, and the animation loop. It is responsible for measuring the
- * initial layout, running the simulation, and providing the component with the
- * necessary data for rendering.
- * 
- * @param content The structured content to be deconstructed and simulated.
- * @returns An object containing the simulation state and control functions.
- */
+
 export const useCharacterPhysics = (content: HomeContentItem[]) => {
-  /** The array of all physics objects (characters) in the simulation. */
   const [objects, setObjects] = useState<PhysicsObject[]>([]);
-  /** The current state of the physics simulation (e.g., 'measuring', 'active'). */
   const [physicsState, setPhysicsState] = useState<PhysicsState>('measuring');
-  /** Tracks if the physics has been activated at least once, for mobile hint. */
   const [hasActivatedOnce, setHasActivatedOnce] = useState(false);
-  /** Controls the visibility of the mobile interaction hint. */
   const [showInteractionHint, setShowInteractionHint] = useState(false);
-  /** A ref to the hidden blueprint container used for measuring initial layout. */
   const layoutRef = useRef<HTMLDivElement>(null);
-  /** A ref to the main container, used for mouse/touch coordinates. */
   const containerRef = useRef<HTMLDivElement>(null);
-  /** The last known position of the user's mouse or touch input. */
   const mousePos = useRef({ x: 0, y: 0 });
-  /** The ID of the current animation frame request. */
   const animationFrameId = useRef<number | null>(null);
-  /** A ref to the physics state to avoid stale closures in the animation loop. */
   const physicsStateRef = useRef(physicsState);
-  /** A media query hook to detect if the viewport is mobile-sized. */
   const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
-  /** Tracks if the component has mounted to prevent server-side rendering issues. */
   const [isMounted, setIsMounted] = useState(false);
-  /** Stores a random greeting to be used in the heading. */
   const [randomHello, setRandomHello] = useState('');
 
   useEffect(() => {
@@ -258,7 +233,7 @@ export const useCharacterPhysics = (content: HomeContentItem[]) => {
     return () => {
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
-  }, []);
+  }, [isMobile]);
 
   const activatePhysics = () => {
     if (isMobile && !hasActivatedOnce) {

@@ -9,7 +9,6 @@ const BlueprintRenderer: React.FC<{ content: HomeContentItem[], randomHello: str
   return (
     <div className="main-content-container">
       <div className="text-content" style={{ paddingLeft: '6px' }}>
-        {/* Render Sections with character spans for measurement */}
         {content.map((item, index) => {
           if (item.type === 'section') {
             return (
@@ -69,7 +68,6 @@ const BlueprintRenderer: React.FC<{ content: HomeContentItem[], randomHello: str
           }
           return null;
         })}
-        {/* Render List with character spans for measurement */}
         <div className="content-section">
           <div className="section-heading">
             {'Projs'.split('').map(char => (
@@ -106,7 +104,6 @@ const BlueprintRenderer: React.FC<{ content: HomeContentItem[], randomHello: str
           </div>
         </div>
       </div>
-      {/* Render the static image in the blueprint to ensure correct text flow */}
       <div className="image-content">
         {imageItem && imageItem.type === 'image' &&
             <Image className="profile-image" src={imageItem.src} alt={imageItem.alt} width={500} height={500} />

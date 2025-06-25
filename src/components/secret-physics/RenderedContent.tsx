@@ -1,5 +1,4 @@
 import { FlyingContentObject } from "@/types";
-import { HomeContentItem } from "@/app/home-content";
 import Image from "next/image";
 import TypingEffect from "../TypingEffect";
 

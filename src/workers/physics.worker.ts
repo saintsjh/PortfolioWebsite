@@ -41,7 +41,6 @@ const MAX_VELOCITY_SQ = MAX_VELOCITY * MAX_VELOCITY;
 const CELL_SIZE = 12;
 const grid = new Map<bigint, FlyingObject[]>();
 
-let renderData: Float32Array;
 let dataBuffer: ArrayBuffer;
 
 // Collision detection and resolution
@@ -235,7 +234,7 @@ function runSimulation() {
   populateRenderBuffer(objects, renderDataView);
   
   const message: RenderMessage = { type: 'render', particles: dataBuffer };
-  (self as any).postMessage(message, [dataBuffer]);
+  (self as unknown as Worker).postMessage(message, [dataBuffer]);
 }
 
 // Handle messages from main thread
