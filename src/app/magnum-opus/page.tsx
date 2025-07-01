@@ -8,7 +8,6 @@ import { useState, useEffect, useMemo } from 'react';
 
 export default function MagnumOpusPage() {
     const [isMounted, setIsMounted] = useState(false);
-    const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
     const randomHello = useMemo(() => getRandomGreeting(), []);
 
     useEffect(() => {
