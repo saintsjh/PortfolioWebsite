@@ -21,8 +21,6 @@ export default function MagnumOpusPage() {
         return null;
     }
 
-    const imageSrc = isMobile ? '/imgs/logo-gradient-jh.svg' : (imageItem?.src || '/imgs/IMG_2635.jpeg');
-
     return (
         <main>
             <NavBar currentPage="magnum-opus" />
