@@ -1,7 +1,3 @@
-/**
- * @file This file defines the main component for the character physics simulation page.
- * It integrates the custom physics hook and renders the different elements of the simulation.
- */
 'use client';
 
 import { useCharacterPhysics } from '@/hooks/useCharacterPhysics';
@@ -11,21 +7,10 @@ import RenderedObject from './character-physics/RenderedObject';
 import BlueprintRenderer from './character-physics/BlueprintRenderer';
 
 interface CharacterPhysicsProps {
-  /** The structured content to be deconstructed and rendered as physics objects. */
   content: HomeContentItem[];
 }
 
-/**
- * A React component that orchestrates the character physics simulation.
- * 
- * This component handles the rendering of the simulation, including the
- * interactive physics objects, the static UI elements (buttons, image),
- * and the hidden blueprint for initial layout measurement. The core logic
- * is delegated to the `useCharacterPhysics` hook.
- * 
- * @param {CharacterPhysicsProps} props The props for the component.
- * @returns {JSX.Element} The rendered component.
- */
+
 const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
   const {
     objects,
@@ -40,10 +25,8 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
     imageItem
   } = useCharacterPhysics(content);
 
-  // The final render
   return (
     <div ref={containerRef} style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      {/* Mobile interaction hint */}
       <div
         style={{
           position: 'fixed',
@@ -66,12 +49,9 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
         Touch and drag to interact!
       </div>
       
-      {/* The main layout container, used ONLY to position the static image */}
       <div className="main-content-container" style={{ pointerEvents: 'none' }}>
-        {/* This div is empty but necessary for the flexbox layout to push the image to the right */}
         <div className="text-content"></div>
 
-        {/* The static image, which is visible in ALL states except 'measuring' */}
         <div className="image-content">
           {imageItem && (
             <Image
@@ -86,34 +66,27 @@ const CharacterPhysics: React.FC<CharacterPhysicsProps> = ({ content }) => {
         </div>
       </div>
 
-      {/* Render the Activate button only when settled */}
       {physicsState === 'settled' && (
         <button onClick={activatePhysics} className="activate-button">
           Activate Physics
         </button>
       )}
 
-      {/* Render the Stop button only when active */}
       {physicsState === 'active' && (
         <button onClick={stopPhysics} className="stop-button">
           Stop Physics
         </button>
       )}
 
-      {/* The animated characters, rendered in an overlay.
-          They will appear once the state is 'settled' because the 'objects' array will be populated.
-          In the 'settled' state, their x/y will match their homeX/homeY, so they look like static text.
-      */}
       <div style={{ position: 'absolute', top: 0, left: 0 }}>
         {objects.map(obj => {
           if (obj.content.type === 'char' && obj.content.char === '\n') {
-            return null; // Don't render newline characters as physics objects
+            return null;
           }
           return <RenderedObject key={obj.id} object={obj} />;
         })}
       </div>
-
-      {/* Hidden blueprint for measurement */}
+        
       {physicsState === 'measuring' && (
         <div 
           ref={layoutRef} 

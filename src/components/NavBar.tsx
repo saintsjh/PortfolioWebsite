@@ -9,7 +9,6 @@ export default function NavBar({ currentPage }: NavBarProps) {
     { href: "/", label: "Home", key: "home" },
     { href: "/projects", label: "Fun link", key: "projects" },
     { href: "/contact", label: "Contact", key: "contact" },
-    { href: "/magnum-opus", label: "Magnum Opus", key: "magnum-opus" },
     { href: "/more-about-me", label: "More About Me", key: "more-about-me" }
   ];
 

@@ -172,27 +172,22 @@ export default function Home() {
         <div className="text-content">
           {homeContent.map((item, index) => {
             if (item.type === 'section' && item.body.type === 'paragraph') {
+              // Combine all text for mobile
+              const combinedText = [
+                item.body.text,
+                item.body.text2,
+                item.body.text3
+              ].filter(Boolean).join(' ');
+              
               return (
                 <div className="content-section" key={`mobile-section-${index}`}>
                   <div className="section-heading" style={{ color: 'var(--ayu-orange)', opacity: 0.7 }}>
                     {item.heading}
                   </div>
                   <div className="section-body">
-                      <>
-                        <p className="about-me-text">
-                          <TypingEffect text={item.body.text} onFinished={emptyCallback} />
-                        </p>
-                        {item.body.text2 && (
-                          <p className="about-me-text" style={{ marginTop: '1rem' }}>
-                            <TypingEffect text={item.body.text2} onFinished={emptyCallback} />
-                          </p>
-                        )}
-                        {item.body.text3 && (
-                          <p className="about-me-text about-me-text-wrap" style={{ marginTop: '1rem' }}>
-                            <TypingEffect text={item.body.text3} onFinished={emptyCallback} />
-                          </p>
-                        )}
-                      </>
+                    <p className="about-me-text">
+                      <TypingEffect text={combinedText} onFinished={emptyCallback} />
+                    </p>
                   </div>
                 </div>
               )

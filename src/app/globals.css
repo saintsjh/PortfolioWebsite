@@ -385,7 +385,10 @@ li.list-item {
   }
   
   .about-me-text {
-    white-space: normal;
+    white-space: normal !important; /* Override the nowrap */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
   }
 
   .image-content {
@@ -497,6 +500,14 @@ li.list-item {
 
   .project-link-wrap {
     display: inline;
+  }
+
+  /* Ensure project list aligns left & wraps */
+  .list-item,
+  .list-item a {
+    text-align: left;
+    white-space: normal; /* allow wrapping */
+    word-break: break-word; /* break long words */
   }
 }
 
@@ -613,14 +624,12 @@ li.list-item {
     flex-shrink: 0;
   }
 
-  /* --- Cleanup old mobile styles --- */
   .main-content-container {
-    /* These are now controlled by the new layout containers */
     margin-left: initial;
     margin-right: initial;
     margin-top: initial;
-    flex-direction: row; /* Revert to default */
-    align-items: flex-start; /* Revert to default */
+    flex-direction: row; 
+    align-items: flex-start; 
   }
 
   .main-content-container .text-content {
@@ -637,7 +646,7 @@ li.list-item {
   
   .mobile-layout .text-content {
     padding-left: 0;
-    margin-top: 4rem; /* Space between header and content */
+    margin-top: 4rem; 
   }
 }
 
@@ -650,13 +659,16 @@ li.list-item {
 }
 
 .mobile-header-left {
-  flex: 1; /* Allow this to grow and push the icon to the right */
+  flex: 1;
+  min-width: 0; 
+  flex-wrap: wrap; 
 }
-  
+
 .mobile-header .main-heading {
-  font-size: 1.3rem;
+  display: flex; 
+  flex-wrap: wrap; 
+  font-size: 1.25rem;
   line-height: 1.4;
-  flex-grow: 1;
 }
 
 .mobile-header .profile-image {
@@ -668,17 +680,17 @@ li.list-item {
 /* More About Me Page Styles */
 .sections-container-desktop {
   display: flex;
-  flex-direction: row-reverse; /* Reverse the order so Skills (first in array) appears on left */
+  flex-direction: row-reverse; 
   gap: 4rem;
   align-items: flex-start;
   width: 100%;
 }
 
-.sections-container-mobile {
-  display: flex;
-  flex-direction: column-reverse; /* Reverse order on mobile so Experience appears first */
-  gap: 2rem;
-}
+  .sections-container-mobile {
+    display: flex;
+    flex-direction: column-reverse; 
+    gap: 2rem;
+  }
 
 .content-section-column {
   flex: 1;
@@ -693,14 +705,14 @@ li.list-item {
   text-align: right;
   font-weight: 700;
   color: var(--ayu-comment);
-  margin-top: 0; /* Ensure no extra margin */
-  padding-top: 0; /* Ensure no extra padding */
+  margin-top: 0; 
+  padding-top: 0; 
 }
 
 .content-section-column .section-body {
   flex: 1;
-  margin-top: 0; /* Remove any top margin */
-  padding-top: 0; /* Remove any top padding */
+  margin-top: 0; 
+  padding-top: 0; 
 }
 
 /* Override text-content max-width for More About Me page */
@@ -708,15 +720,63 @@ li.list-item {
   max-width: 100% !important;
   padding-left: 65px;
   padding-right: 65px;
-  padding-bottom: 6rem; /* Add bottom padding to prevent nav bar overlap */
+  padding-bottom: 6rem; 
 }
 
 @media (max-width: 768px) {
   .more-about-me .text-content {
     max-width: 100% !important;
-    padding-left: 0px;
-    padding-right: 0px;
-    padding-bottom: 6rem; /* Add bottom padding for mobile too */
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 3rem;
+      text-align: center; 
+  }
+
+  .more-about-me {
+    align-items: center; 
+    justify-content: center; 
+    padding: 1rem;
+  }
+
+  .more-about-me .sections-container-mobile {
+    text-align: center;
+    align-items: center;
+    flex-direction: column-reverse; 
+    gap: 1rem; 
+  }
+
+      .more-about-me .content-section-column {
+      text-align: center;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column; 
+      gap: 0.25rem; 
+      width: 100%; 
+    }
+
+  .more-about-me .content-section-column .section-heading {
+    text-align: center;
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem; 
+    font-weight: bold;
+    width: 100%; 
+  }
+
+  .more-about-me .content-section-column .section-body {
+    text-align: center;
+    width: 100%;
+  }
+
+  .more-about-me .skills-grid {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .more-about-me .experience-list,
+  .more-about-me .experience-item,
+  .more-about-me .experience-header {
+    text-align: center;
+    justify-content: center;
   }
 }
 
@@ -727,7 +787,6 @@ li.list-item {
 }
 
 .skill-category {
-  /* background: color-mix(in srgb, var(--ayu-bg) 80%, #fff); */
   padding: 0.75rem;
   border-radius: 8px;
 }
@@ -760,7 +819,6 @@ li.list-item {
 }
 
 .experience-item {
-  /* No special styling needed for the container yet */
 }
 
 .experience-header {
@@ -789,7 +847,7 @@ li.list-item {
 
 .experience-description {
   list-style-position: outside;
-  padding-left: 1.2rem; /* Indent the list */
+  padding-left: 1.2rem; 
 }
 
 .experience-description li {
@@ -797,8 +855,9 @@ li.list-item {
   line-height: 1.6;
 }
 
-@media (min-width: 769px) {
-  .text-content {
-    padding-bottom: 5rem; /* Move padding here instead of main element */
+  @media (min-width: 769px) {
+    .text-content {
+     padding-bottom: 5rem; 
+    }
   }
-}
+
