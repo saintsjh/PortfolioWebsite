@@ -19,7 +19,7 @@ export const moreAboutMeContent = [
       categories: [
         {
           title: 'Languages',
-          skills: ['JavaScript', 'TypeScript', 'Python', 'Java', 'C#', 'SQL (PostgreSQL, MySQL)', 'HTML5', 'CSS3/Sass', 'C++', 'C']
+          skills: ['JavaScript', 'TypeScript', 'Python', 'Java', 'C#', 'SQL (PostgreSQL, MySQL)', 'HTML5', 'CSS3/Sass', 'C++', 'C', 'Go']
         },
         {
           title: 'Frameworks & Libraries',
@@ -31,7 +31,7 @@ export const moreAboutMeContent = [
         },
         {
           title: 'Tools & Platforms',
-          skills: ['Git & GitHub', 'Docker', 'CI/CD', 'AWS', 'Vercel', 'Jira', 'Figma']
+          skills: ['Git & GitHub', 'Docker', 'CI/CD', 'AWS', 'Vercel', 'Jira', 'Figma', 'UML']
         }
       ] as SkillCategory[]
     }
@@ -45,11 +45,12 @@ export const moreAboutMeContent = [
         {
           title: 'SDE Intern',
           company: 'Citi',
-          date: 'June 2, 2025 - Present',
+          date: 'June 2, 2025 - August 8, 2025',
           description: [
             'Utilizing Angular and Typescript to develop for Citi\'s internal applications.',
             'Collaborated with cross-functional teams to define, design, and ship new features.',
-            'Work with a large team to develop a new features for the existing applications in production.'
+            'Created new UML diagrams for new application, that were used to guide development.',
+            'Work with a large team to develop a new features for the existing applications in production.',
           ]
         },
         {

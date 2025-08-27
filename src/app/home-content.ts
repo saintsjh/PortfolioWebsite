@@ -110,13 +110,19 @@ export const homeContent: HomeContentItem[] = [
   },
   {
     type: 'listItem',
-    text: '03. Elden Counter',
+    text: '03. StreamFlow',
+    href: 'https://github.com/saintsjh/StreamFlow',
+    description: 'A video streaming application built with React Native, Expo, TypeScript and Go, featuring a modern UI and smooth streaming experience. This project was built for a hackathon.',
+  },
+  {
+    type: 'listItem',
+    text: '04. Elden Counter',
     href: 'https://github.com/saintsjh/EldenCounter',
     description: 'A tool for tracking deaths in the game Elden Ring.',
   },
   {
     type: 'listItem',
-    text: '04. Arduino Robot',
+    text: '05. Arduino Robot',
     href: 'https://github.com/saintsjh/ArduinoRobot',
     description: 'An open-source, 3D-printed robotic arm powered by an Arduino, designed to be a low-cost, effective learning tool for robotics and automation.',
   },
