@@ -62,10 +62,6 @@
   }
 }
 
-.image-content:hover {
-  transform: scale(1.02);
-  transition: transform 0.3s ease-in-out;
-}
 
 @media (max-width: 768px) {
   .image-content:hover {
@@ -81,9 +77,6 @@
   transition: transform 0.3s ease-in-out;
 }
 
-.profile-image:hover {
-  transform: scale(1.05); /* Slightly larger zoom on image hover */
-}
 
 @media (max-width: 768px) {
   .main-heading {
